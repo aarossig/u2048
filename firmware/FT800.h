@@ -11,6 +11,7 @@
 #include "SystemSpi.h"
 
 #define FT800_DL_START 0x100000
+#define FT800_DL_CMD_LEN 4
 #define FT800_CMD_START 0x108000
 #define FT800_CHIPID 0x7C
 
@@ -103,11 +104,19 @@ typedef enum FT800Register_t {
     FT800Register_PCLK = 0x10246C
 } FT800Register_t;
 
+/* FT800 Display List *********************************************************/
+
+void FT800DlClearRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue);
+void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf);
+void FT800DlEnd(FT800_t *ft800);
+void FT800DlSwap(FT800_t *ft800);
+
 /* FT800 Coprocessor Commands *************************************************/
 
-void FT800NewDisplayList(FT800_t *ft800);
-void FT800SwapDisplayList(FT800_t *ft800);
-void FT800Logo(FT800_t *ft800);
+void FT800CmdNewDisplayList(FT800_t *ft800);
+void FT800CmdSwapDisplayList(FT800_t *ft800);
+void FT800CmdLogo(FT800_t *ft800);
+void FT800CmdFlush(FT800_t *ft800);
 
 /* FT800 Commands *************************************************************/
 
@@ -125,6 +134,8 @@ typedef enum FT800Command_t {
 void FT800SendCommand(FT800_t *ft800, FT800Command_t command);
 
 /* FT800 Memory Operations ****************************************************/
+
+void FT800DlCommand(FT800_t *ft800, uint8_t *buf);
 
 void FT800CoprocessorCommand(FT800_t *ft800, uint8_t *buf, uint32_t length);
 

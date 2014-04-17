@@ -69,24 +69,19 @@ int main(void)
     uint8_t setSwizzle[] = { 0x03 };
     FT800Write(&ft800, FT800Register_SWIZZLE, setSwizzle, 1);
     
-    uint8_t setColor[] = { 0xFF, 0x00, 0x00, 0x02 };
-    FT800Write(&ft800, 0x100000, setColor, 4);
-    
-    uint8_t clear[] = { 0x07, 0x00, 0x00, 0x26 };
-    FT800Write(&ft800, 0x100000 + 4, clear, 4);
+    FT800DlClearRgb(&ft800, 0, 0, 0);
+    FT800DlClearCSTBuffers(&ft800, true, true, true);
+    FT800DlEnd(&ft800);
 
-    uint8_t displayEnd[] = { 0x00, 0x00, 0x00, 0x00 };
-    FT800Write(&ft800, 0x100000 + 8, displayEnd, 4);
-   
-    uint8_t swapList[] = { 0x01 };
-    FT800Write(&ft800, 0x102450, swapList, 1);
-    
+    FT800CmdSwapDisplayList(&ft800);
+    FT800CmdFlush(&ft800);
+
     uint8_t enableClock[] = { 0x05 };
     FT800Write(&ft800, FT800Register_PCLK, enableClock, 1);
     
-    FT800NewDisplayList(&ft800);
-    FT800Logo(&ft800);
-    FT800FlushCommands(&ft800);
+    FT800CmdNewDisplayList(&ft800);
+    FT800CmdLogo(&ft800);
+    FT800CmdFlush(&ft800);
 
     while(1);
     
