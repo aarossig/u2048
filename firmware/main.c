@@ -55,14 +55,19 @@ int main(void)
     for(volatile int i = 0; i < 10000; i++);
     
     uint8_t chipId[] = { 0 };
-    while(chipId[0] != 0x7C)
-        FT800Read(&ft800, 0x102400, chipId, 1);
+    while(chipId[0] != FT800_CHIPID)
+        FT800Read(&ft800, FT800Register_ID, chipId, 1);
     
     uint8_t gpioState[1] = { 0x80 };
-    FT800Write(&ft800, 0x102490, gpioState, 1);
-
+    FT800Write(&ft800, FT800Register_GPIO, gpioState, 1);
+    
     uint8_t setClockPol[] = { 0x01 };
-    FT800Write(&ft800, 0x102468, setClockPol, 1);
+    FT800Write(&ft800, FT800Register_PCLK_POL, setClockPol, 1);
+    
+    uint8_t enableClock[] = { 0x05 };
+    FT800Write(&ft800, FT800Register_PCLK, enableClock, 1);
+    
+    FT800NewDisplayList(&ft800);
     
     uint8_t setColor[] = { 0xFF, 0x00, 0x00, 0x02 };
     FT800Write(&ft800, 0x100000, setColor, 4);
@@ -73,11 +78,7 @@ int main(void)
     uint8_t displayEnd[] = { 0x00, 0x00, 0x00, 0x00 };
     FT800Write(&ft800, 0x100000 + 8, displayEnd, 4);
     
-    uint8_t swapList[] = { 0x01 };
-    FT800Write(&ft800, 0x102450, swapList, 1);
-    
-    uint8_t enableClock[] = { 0x05 };
-    FT800Write(&ft800, 0x10246C, enableClock, 1);
+    FT800SwapDisplayList(&ft800);
     
     while(1);
     

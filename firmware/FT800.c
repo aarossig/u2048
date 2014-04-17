@@ -4,6 +4,36 @@
 
 #include "FT800.h"
 
+/* FT800 Display List *********************************************************/
+
+void FT800NewDisplayList(FT800_t *ft800)
+{
+    uint8_t newDisplayList[] = {
+        0x00,
+        0xFF,
+        0xFF,
+        0xFF
+    };
+
+    ft800->CsPort->Output.Port &= ~(1 << ft800->CsPin);
+    FT800SpiWrite(ft800, newDisplayList, 4);
+    ft800->CsPort->Output.Port |= (1 << ft800->CsPin);
+}
+
+void FT800SwapDisplayList(FT800_t *ft800)
+{
+    uint8_t swapDisplayList[] = {
+        0x01,
+        0xFF,
+        0xFF,
+        0xFF
+    };
+
+    ft800->CsPort->Output.Port &= ~(1 << ft800->CsPin);
+    FT800SpiWrite(ft800, swapDisplayList, 4);
+    ft800->CsPort->Output.Port |= (1 << ft800->CsPin);
+}
+
 /* FT800 Commands *************************************************************/
 
 void FT800SendCommand(FT800_t *ft800, FT800Command_t command)

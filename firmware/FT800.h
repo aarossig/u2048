@@ -10,12 +10,16 @@
 #include "SystemGpio.h"
 #include "SystemSpi.h"
 
+#define FT800_DL_START 0x100000
+#define FT800_CHIPID 0x7C
+
 /* FT800 Instance *************************************************************/
 
 typedef struct FT800_t {
     volatile SystemSpiModule_t *Spi;
     volatile SystemGpioModule_t *CsPort;
     uint32_t CsPin;
+    uint32_t DisplayListAddress;
 } FT800_t;
 
 /* FT800 Registers ************************************************************/
@@ -94,6 +98,12 @@ typedef enum FT800Register_t {
     FT800Register_PCLK_POL = 0x102468,
     FT800Register_PCLK = 0x10246C
 } FT800Register_t;
+
+/* FT800 Display List *********************************************************/
+
+void FT800NewDisplayList(FT800_t *ft800);
+
+void FT800SwapDisplayList(FT800_t *ft800);
 
 /* FT800 Commands *************************************************************/
 
