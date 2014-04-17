@@ -11,6 +11,7 @@
 #include "SystemSpi.h"
 
 #define FT800_DL_START 0x100000
+#define FT800_CMD_START 0x108000
 #define FT800_CHIPID 0x7C
 
 /* FT800 Instance *************************************************************/
@@ -20,7 +21,10 @@ typedef struct FT800_t {
     volatile SystemGpioModule_t *CsPort;
     uint32_t CsPin;
     uint32_t DisplayListAddress;
+    uint32_t CommandAddress;
 } FT800_t;
+
+void FT800Init(FT800_t *ft800);
 
 /* FT800 Registers ************************************************************/
 
@@ -99,11 +103,11 @@ typedef enum FT800Register_t {
     FT800Register_PCLK = 0x10246C
 } FT800Register_t;
 
-/* FT800 Display List *********************************************************/
+/* FT800 Coprocessor Commands *************************************************/
 
 void FT800NewDisplayList(FT800_t *ft800);
-
 void FT800SwapDisplayList(FT800_t *ft800);
+void FT800Logo(FT800_t *ft800);
 
 /* FT800 Commands *************************************************************/
 
@@ -122,6 +126,8 @@ void FT800SendCommand(FT800_t *ft800, FT800Command_t command);
 
 /* FT800 Memory Operations ****************************************************/
 
+void FT800CoprocessorCommand(FT800_t *ft800, uint8_t *buf, uint32_t length);
+
 void FT800Read(FT800_t *ft800, uint32_t address,
     uint8_t *buf, uint32_t length);
 
@@ -130,6 +136,7 @@ void FT800Write(FT800_t *ft800, uint32_t address,
 
 /* FT800 SPI ******************************************************************/
 
+void FT800SpiWriteCs(FT800_t *ft800, uint8_t *buf, uint32_t length);
 void FT800SpiWrite(FT800_t *ft800, uint8_t *buf, uint32_t length);
 void FT800SpiWriteRead(FT800_t *ft800, uint8_t *buf, uint32_t length);
 

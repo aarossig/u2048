@@ -2,6 +2,6 @@
 
 ## Overview
 
-This project implements the popular 2048 gane on an STM32F4 Nucleo board.
+This project implements the popular 2048 game on an STM32F4 Nucleo board.
 
 A Gameduino2 is used for UI.

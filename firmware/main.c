@@ -49,6 +49,8 @@ int main(void)
         .CsPin = 9
     };
     
+    FT800Init(&ft800);
+    
     FT800SendCommand(&ft800, FT800Command_Active);
     FT800SendCommand(&ft800, FT800Command_Clock48);
     FT800SendCommand(&ft800, FT800Command_Reset);
@@ -60,26 +62,32 @@ int main(void)
     
     uint8_t gpioState[1] = { 0x80 };
     FT800Write(&ft800, FT800Register_GPIO, gpioState, 1);
-    
-    uint8_t setClockPol[] = { 0x01 };
+
+    uint8_t setClockPol[] = { 0x00 };
     FT800Write(&ft800, FT800Register_PCLK_POL, setClockPol, 1);
-    
-    uint8_t enableClock[] = { 0x05 };
-    FT800Write(&ft800, FT800Register_PCLK, enableClock, 1);
-    
-    FT800NewDisplayList(&ft800);
+
+    uint8_t setSwizzle[] = { 0x03 };
+    FT800Write(&ft800, FT800Register_SWIZZLE, setSwizzle, 1);
     
     uint8_t setColor[] = { 0xFF, 0x00, 0x00, 0x02 };
     FT800Write(&ft800, 0x100000, setColor, 4);
     
     uint8_t clear[] = { 0x07, 0x00, 0x00, 0x26 };
     FT800Write(&ft800, 0x100000 + 4, clear, 4);
-    
+
     uint8_t displayEnd[] = { 0x00, 0x00, 0x00, 0x00 };
     FT800Write(&ft800, 0x100000 + 8, displayEnd, 4);
+   
+    uint8_t swapList[] = { 0x01 };
+    FT800Write(&ft800, 0x102450, swapList, 1);
     
-    FT800SwapDisplayList(&ft800);
+    uint8_t enableClock[] = { 0x05 };
+    FT800Write(&ft800, FT800Register_PCLK, enableClock, 1);
     
+    FT800NewDisplayList(&ft800);
+    FT800Logo(&ft800);
+    FT800FlushCommands(&ft800);
+
     while(1);
     
     return 0;
