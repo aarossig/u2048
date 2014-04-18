@@ -35,6 +35,12 @@ typedef struct FT800Point_t {
     int16_t Y;
 } FT800Point_t;
 
+typedef struct FT800Color_t {
+    uint8_t Red;
+    uint8_t Green;
+    uint8_t Blue;
+} FT800Color_t;
+
 typedef struct FT800_t {
     volatile SystemSpiModule_t *Spi;
     volatile SystemGpioModule_t *CsPort;
@@ -44,6 +50,8 @@ typedef struct FT800_t {
 } FT800_t;
 
 void FT800Init(FT800_t *ft800);
+
+bool FT800ColorsEqual(const FT800Color_t c1, const FT800Color_t c2);
 
 /* FT800 Registers ************************************************************/
 
@@ -136,10 +144,10 @@ void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2);
 void FT800DlNew(FT800_t *ft800);
 void FT800DlStartPrimitive(FT800_t *ft800, FT800PrimitiveType_t primitive);
 void FT800DlEndPrimitive(FT800_t *ft800);
-void FT800DlClearRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue);
+void FT800DlClearRgb(FT800_t *ft800, FT800Color_t color);
 void FT800DlVertexI(FT800_t *ft800,
     uint16_t x, uint16_t y, uint8_t handle, uint8_t cell);
-void FT800DlRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue);
+void FT800DlRgb(FT800_t *ft800, FT800Color_t color);
 void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf);
 void FT800DlEnd(FT800_t *ft800);
 void FT800DlSwap(FT800_t *ft800);

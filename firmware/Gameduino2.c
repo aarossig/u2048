@@ -67,7 +67,9 @@ bool Gameduino2Init(FT800_t *ft800)
 
 void Gameduino2Blank(FT800_t *ft800)
 {
-    FT800DlClearRgb(ft800, 0, 0, 0);
+    FT800Color_t black = { .Red = 0, .Green = 0, .Blue = 0 };
+
+    FT800DlClearRgb(ft800, black);
     FT800DlClearCSTBuffers(ft800, true, true, true);
     FT800DlEnd(ft800);
     FT800CmdSwapDisplayList(ft800);

@@ -7,7 +7,9 @@
 
 #include <stdint.h>
 
-#define U2048_SIZE 4
+#include "FT800.h"
+
+#define U2048_GAME_SIZE 4
 
 /* Game Structs ***************************************************************/
 
@@ -28,11 +30,13 @@ typedef enum U2048Tile_t {
 
 typedef struct U2048_t {
     uint32_t Score;
-    U2048Tile_t Tiles[U2048_SIZE][U2048_SIZE];
+    U2048Tile_t Tiles[U2048_GAME_SIZE][U2048_GAME_SIZE];
+    FT800_t *ft800;
 } U2048_t;
 
 /* Game Functions *************************************************************/
 
-void U2048Init(U2048_t *game);
+void U2048Init(U2048_t *game, FT800_t *ft800);
+void U2048GameRender(U2048_t *game);
 
 #endif

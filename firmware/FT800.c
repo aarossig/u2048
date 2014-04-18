@@ -12,6 +12,13 @@ void FT800Init(FT800_t *ft800)
     ft800->CommandAddress = 0;
 }
 
+bool FT800ColorsEqual(const FT800Color_t c1, const FT800Color_t c2)
+{
+    return (c1.Red == c2.Red
+        && c1.Green == c2.Green
+        && c1.Blue == c2.Blue);
+}
+
 /* FT800 Register Abstractions ************************************************/
 
 uint8_t FT800ReadChipId(FT800_t *ft800)
@@ -33,7 +40,7 @@ void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2)
 {
     FT800DlStartPrimitive(ft800, FT800PrimitiveType_Rectangle);
     FT800DlVertexI(ft800, p1.X, p1.Y, 0, 0);
-    FT800DlVertexI(ft800, p2.X, p2.Y, 0, 0);
+    FT800DlVertexI(ft800, p2.X - 1, p2.Y - 1, 0, 0);
     FT800DlEndPrimitive(ft800);
 }
 
@@ -80,15 +87,15 @@ void FT800DlVertexI(FT800_t *ft800,
     FT800DlCommand(ft800, vertex.command);
 }
 
-void FT800DlClearRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue)
+void FT800DlClearRgb(FT800_t *ft800, FT800Color_t color)
 {
-    uint8_t clearRgb[] = { blue, green, red, 0x02 };
+    uint8_t clearRgb[] = { color.Blue, color.Green, color.Red, 0x02 };
     FT800DlCommand(ft800, clearRgb);
 }
 
-void FT800DlRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue)
+void FT800DlRgb(FT800_t *ft800, FT800Color_t color)
 {
-    uint8_t rgb[] = { green, blue, red, 0x04 };
+    uint8_t rgb[] = { color.Green, color.Blue, color.Red, 0x04 };
     FT800DlCommand(ft800, rgb);
 }
 
