@@ -6,6 +6,7 @@
 #define FT800_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "SystemGpio.h"
 #include "SystemSpi.h"
@@ -16,6 +17,23 @@
 #define FT800_CHIPID 0x7C
 
 /* FT800 Instance *************************************************************/
+
+typedef enum FT800PrimitiveType_t {
+    FT800PrimitiveType_Bitmap = 0x01,
+    FT800PrimitiveType_Points,
+    FT800PrimitiveType_Lines,
+    FT800PrimitiveType_LineStrip,
+    FT800PrimitiveType_EdgeStripRight,
+    FT800PrimitiveType_EdgeStripLeft,
+    FT800PrimitiveType_EdgeStripTop,
+    FT800PrimitiveType_EdgeStripBottom,
+    FT800PrimitiveType_Rectangle
+} FT800PrimitiveType_t;
+
+typedef struct FT800Point_t {
+    int16_t X;
+    int16_t Y;
+} FT800Point_t;
 
 typedef struct FT800_t {
     volatile SystemSpiModule_t *Spi;
@@ -104,9 +122,24 @@ typedef enum FT800Register_t {
     FT800Register_PCLK = 0x10246C
 } FT800Register_t;
 
+/* FT800 Register Abstractions ************************************************/
+
+uint8_t FT800ReadChipId(FT800_t *ft800);
+void FT800SwapDisplayList(FT800_t *ft800);
+
+/* FT800 Abstracted Drawing ***************************************************/
+
+void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2);
+
 /* FT800 Display List *********************************************************/
 
+void FT800DlNew(FT800_t *ft800);
+void FT800DlStartPrimitive(FT800_t *ft800, FT800PrimitiveType_t primitive);
+void FT800DlEndPrimitive(FT800_t *ft800);
 void FT800DlClearRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue);
+void FT800DlVertexI(FT800_t *ft800,
+    uint16_t x, uint16_t y, uint8_t handle, uint8_t cell);
+void FT800DlRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue);
 void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf);
 void FT800DlEnd(FT800_t *ft800);
 void FT800DlSwap(FT800_t *ft800);

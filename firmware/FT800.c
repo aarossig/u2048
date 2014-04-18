@@ -9,15 +9,87 @@
 void FT800Init(FT800_t *ft800)
 {
     ft800->DisplayListAddress = FT800_DL_START;
-    ft800->CommandAddress = FT800_CMD_START;
+    ft800->CommandAddress = 0;
+}
+
+/* FT800 Register Abstractions ************************************************/
+
+uint8_t FT800ReadChipId(FT800_t *ft800)
+{
+    uint8_t chipId[1];
+    FT800Read(ft800, FT800Register_ID, chipId, 1);
+    return chipId[0];
+}
+
+void FT800SwapDisplayList(FT800_t *ft800)
+{
+    uint8_t dlSwap[] = { 0x02, 0x00, 0x00, 0x00 };
+    FT800Write(ft800, FT800Register_DLSWAP, dlSwap, 4);
+}
+
+/* FT800 Abstracted Drawing ***************************************************/
+
+void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2)
+{
+    FT800DlStartPrimitive(ft800, FT800PrimitiveType_Rectangle);
+    FT800DlVertexI(ft800, p1.X, p1.Y, 0, 0);
+    FT800DlVertexI(ft800, p2.X, p2.Y, 0, 0);
+    FT800DlEndPrimitive(ft800);
 }
 
 /* FT800 Display List *********************************************************/
+
+void FT800DlNew(FT800_t *ft800)
+{
+    ft800->DisplayListAddress = FT800_DL_START;
+}
+
+void FT800DlStartPrimitive(FT800_t *ft800, FT800PrimitiveType_t primitive)
+{
+    uint8_t startPrimitive[] = { (primitive & 0x0F), 0x00, 0x00, 0x1F };
+    FT800DlCommand(ft800, startPrimitive);
+}
+
+void FT800DlEndPrimitive(FT800_t *ft800)
+{
+    uint8_t endPrimitive[] = { 0x00, 0x00, 0x00, 0x21 };
+    FT800DlCommand(ft800, endPrimitive);
+}
+
+void FT800DlVertexI(FT800_t *ft800,
+    uint16_t x, uint16_t y, uint8_t handle, uint8_t cell)
+{
+    union {
+        struct {
+            uint32_t cell   : 7;
+            uint32_t handle : 5;
+            uint32_t y      : 9;
+            uint32_t x      : 9;
+            uint32_t cmd    : 2;
+        } arguments;
+        
+        uint8_t command[4];
+    } vertex;
+
+    vertex.arguments.cell = cell;
+    vertex.arguments.handle = handle;
+    vertex.arguments.y = y;
+    vertex.arguments.x = x;
+    vertex.arguments.cmd = 0x02;
+
+    FT800DlCommand(ft800, vertex.command);
+}
 
 void FT800DlClearRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue)
 {
     uint8_t clearRgb[] = { blue, green, red, 0x02 };
     FT800DlCommand(ft800, clearRgb);
+}
+
+void FT800DlRgb(FT800_t *ft800, uint8_t red, uint8_t green, uint8_t blue)
+{
+    uint8_t rgb[] = { green, blue, red, 0x04 };
+    FT800DlCommand(ft800, rgb);
 }
 
 void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf)
@@ -63,13 +135,25 @@ void FT800CmdLogo(FT800_t *ft800)
 void FT800CmdFlush(FT800_t *ft800)
 {
     uint8_t address[] = {
-        (ft800->CommandAddress) & 0xFF,
-        (ft800->CommandAddress >> 8) & 0xFF,
-        (ft800->CommandAddress >> 16) & 0xFF
+        ft800->CommandAddress,
+        ft800->CommandAddress >> 8,
+        ft800->CommandAddress >> 16
     };
     
     FT800Write(ft800, FT800Register_CMD_WRITE, address, 3);
-    ft800->CommandAddress = FT800_CMD_START;
+    
+    uint8_t addressBuf[4];
+    uint32_t currentAddress = 0;
+    
+    while(currentAddress != ft800->CommandAddress)
+    {
+        FT800Read(ft800, FT800Register_CMD_READ, addressBuf, 4);
+
+        currentAddress = addressBuf[0]
+            | (addressBuf[1] << 8)
+            | (addressBuf[2] << 16)
+            | (addressBuf[3] << 24);
+    }
 }
 
 /* FT800 Commands *************************************************************/
@@ -90,8 +174,9 @@ void FT800DlCommand(FT800_t *ft800, uint8_t *buf)
 
 void FT800CoprocessorCommand(FT800_t *ft800, uint8_t *buf, uint32_t length)
 {
-    FT800Write(ft800, ft800->CommandAddress, buf, length);
+    FT800Write(ft800, FT800_CMD_START + ft800->CommandAddress, buf, length);
     ft800->CommandAddress += length;
+    ft800->CommandAddress %= 4096;
 }
 
 void FT800Read(FT800_t *ft800, uint32_t address,
