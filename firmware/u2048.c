@@ -62,6 +62,11 @@ void U2048GameRender(U2048_t *game)
             U2048NewTile(game, j, i, U2048Tile_2);
         }
     }
+
+    U2048RenderStart(game);
+    U2048RenderBoard(game);
+    U2048RenderTiles(game);
+    U2048RenderFinish(game);
 }
 
 void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
@@ -97,8 +102,6 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
     }
 
     game->Tiles[x][y] = tile;
-
-    U2048GameRender(game);
 }
 
 /* Render Functions ***********************************************************/
@@ -165,7 +168,10 @@ void U2048RenderTiles(U2048_t *game)
             
             FT800DrawRectangle(game->ft800, p1, p2);
 
-            // If the tile is non-empty, render the number as well
+            if(game->Tiles[i][j] != U2048Tile_Empty)
+            {
+                // Render the number on the tile
+            }
         }
     }
 }

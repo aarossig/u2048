@@ -6,6 +6,7 @@
 #define U2048_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "FT800.h"
 
@@ -14,18 +15,18 @@
 /* Game Structs ***************************************************************/
 
 typedef enum U2048Tile_t {
-    U2048Tile_Empty,
-    U2048Tile_2,
-    U2048Tile_4,
-    U2048Tile_8,
-    U2048Tile_16,
-    U2048Tile_32,
-    U2048Tile_64,
-    U2048Tile_128,
-    U2048Tile_256,
-    U2048Tile_512,
-    U2048Tile_1024,
-    U2048Tile_2048
+    U2048Tile_Empty = 0,
+    U2048Tile_2 = 2,
+    U2048Tile_4 = 4,
+    U2048Tile_8 = 8,
+    U2048Tile_16 = 16,
+    U2048Tile_32 = 32,
+    U2048Tile_64 = 64,
+    U2048Tile_128 = 128,
+    U2048Tile_256 = 256,
+    U2048Tile_512 = 512,
+    U2048Tile_1024 = 1024,
+    U2048Tile_2048 = 2048
 } U2048Tile_t;
 
 typedef struct U2048_t {

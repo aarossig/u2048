@@ -30,6 +30,30 @@ typedef enum FT800PrimitiveType_t {
     FT800PrimitiveType_Rectangle
 } FT800PrimitiveType_t;
 
+typedef enum FT800Option_t {
+    FT800Option_CenterX = 512,
+    FT800Option_CenterY = 1024
+} FT800Option_t;
+
+typedef enum FT800Font_t {
+    FT800Font_BoldAliased1 = 0x10,
+    FT800Font_ExtAscii1,
+    FT800Font_BoldAliased2,
+    FT800Font_ExtAscii2,
+    FT800Font_Aliased1,
+    FT800Font_Aliased2,
+    FT800Font_Aliased3,
+    FT800Font_Aliased4,
+    FT800Font_Aliased5,
+    FT800Font_Aliased6,
+    FT800Font_AntiAliased1,
+    FT800Font_AntiAliased2,
+    FT800Font_AntiAliased3,
+    FT800Font_AntiAliased4,
+    FT800Font_AntiAliased5,
+    FT800Font_AntiAliased6
+} FT800Font_t;
+
 typedef struct FT800Point_t {
     int16_t X;
     int16_t Y;
@@ -156,6 +180,8 @@ void FT800DlSwap(FT800_t *ft800);
 
 void FT800CmdNewDisplayList(FT800_t *ft800);
 void FT800CmdSwapDisplayList(FT800_t *ft800);
+void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
+    FT800Option_t options, char *str, uint32_t length);
 void FT800CmdLogo(FT800_t *ft800);
 void FT800CmdFlush(FT800_t *ft800);
 

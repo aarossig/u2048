@@ -5,8 +5,8 @@
 /* Memory Sections
  */
 MEMORY {
-    flash (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
-    sram  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00001000
+    flash (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00100000
+    sram  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00010000
 }
 
 /* Memory Sections

@@ -133,6 +133,29 @@ void FT800CmdSwapDisplayList(FT800_t *ft800)
     FT800CoprocessorCommand(ft800, swapDisplayList, 4);
 }
 
+void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
+    FT800Option_t options, char *str, uint32_t length)
+{
+    uint8_t showText[] = {
+        0x0C, 0xFF, 0xFF, 0xFF,
+        p.X, (p.X >> 8),
+        p.Y, (p.Y >> 8),
+        font, (font >> 8),
+        options, (options >> 8)
+    };
+
+    uint8_t terminator[] = { 0x00 };
+
+    ft800->CsPort->Output.Port &= ~(1 << ft800->CsPin);
+    FT800SpiWrite(ft800, showText, 12);
+    FT800SpiWrite(ft800, (uint8_t *)str, length);
+    FT800SpiWrite(ft800, terminator, 1);
+    ft800->CsPort->Output.Port |= (1 << ft800->CsPin);
+
+    ft800->CommandAddress += 12 + length + 1;
+    ft800->CommandAddress %= 4096;
+}
+
 void FT800CmdLogo(FT800_t *ft800)
 {
     uint8_t logo[] = { 0x31, 0xFF, 0xFF, 0xFF };
