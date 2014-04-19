@@ -89,7 +89,7 @@ void FT800DlClearRgb(FT800_t *ft800, FT800Color_t color)
 
 void FT800DlRgb(FT800_t *ft800, FT800Color_t color)
 {
-    uint8_t rgb[] = { color.Green, color.Blue, color.Red, 0x04 };
+    uint8_t rgb[] = { color.Blue, color.Green, color.Red, 0x04 };
     FT800CoprocessorCommand(ft800, rgb, 4);
 }
 
@@ -144,7 +144,7 @@ void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
         options, (options >> 8)
     };
 
-    uint8_t terminator[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t terminator[] = { 0x00, 0x00, 0x00, 0x00 };
 
     ft800->CsPort->Output.Port &= ~(1 << ft800->CsPin);
     FT800SpiWrite(ft800, addressBuf, 3);

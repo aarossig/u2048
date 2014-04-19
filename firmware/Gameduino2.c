@@ -51,11 +51,17 @@ bool Gameduino2Init(FT800_t *ft800)
         return false;
     }
     
+    uint8_t gpioDir[] = { 0x83 };
+    FT800Write(ft800, FT800Register_GPIO_DIR, gpioDir, 1);
+
     uint8_t gpioState[] = { 0x80 };
     FT800Write(ft800, FT800Register_GPIO, gpioState, 1);
     
     uint8_t setSwizzle[] = { 0x03 };
     FT800Write(ft800, FT800Register_SWIZZLE, setSwizzle, 1);
+
+    uint8_t setPolarity[] = { 0x01 };
+    FT800Write(ft800, FT800Register_PCLK_POL, setPolarity, 1);
 
     Gameduino2Blank(ft800);
 

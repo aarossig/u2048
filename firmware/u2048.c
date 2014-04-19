@@ -16,15 +16,32 @@
 #define U2048_TILE_SPACING ((U2048_SIZE - (U2048_GAME_SIZE * U2048_TILE_SIZE)) \
                            / (U2048_GAME_SIZE + 1))
 
-const FT800Color_t ColorWhite = { .Red = 255, .Green = 255, .Blue = 255 };
+/* Game Colors ****************************************************************/
+
 const FT800Color_t ColorBoard = { .Red = 187, .Green = 173, .Blue = 160 };
-const FT800Color_t ColorEmpty = { .Red = 119, .Green = 110, .Blue = 101 };
-const FT800Color_t ColorTwo = { .Red = 238, .Green = 228, .Blue = 218 };
+
+const FT800Color_t ColorEmpty = { .Red = 204, .Green = 192, .Blue = 179 };
+const FT800Color_t Color2 = { .Red = 238, .Green = 228, .Blue = 218 };
+const FT800Color_t Color4 = { .Red = 237, .Green = 224, .Blue = 200 };
+const FT800Color_t Color8 = { .Red = 242, .Green = 177, .Blue = 121 };
+const FT800Color_t Color16 = { .Red = 245, .Green = 149, .Blue = 99 };
+const FT800Color_t Color32 = { .Red = 246, .Green = 124, .Blue = 95 };
+const FT800Color_t Color64 = { .Red = 246, .Green = 94, .Blue = 59 };
+const FT800Color_t Color128 = { .Red = 237, .Green = 207, .Blue = 114 };
+const FT800Color_t Color256 = { .Red = 237, .Green = 204, .Blue = 97 };
+const FT800Color_t Color512 = { .Red = 237, .Green = 200, .Blue = 80 };
+const FT800Color_t Color1024 = { .Red = 237, .Green = 197, .Blue = 63 };
+const FT800Color_t Color2048 = { .Red = 237, .Green = 194, .Blue = 46 };
+
+const FT800Color_t ColorTextDark = { .Red = 119, .Green = 110, .Blue = 101 };
+const FT800Color_t ColorTextBright = { .Red = 249, .Green = 246, .Blue = 242 };
+
 const FT800Color_t ColorDefault = { .Red = 0, .Green = 255, .Blue = 255 };
 
 /* Render Functions ***********************************************************/
 
 FT800Color_t U2048GetTileColor(U2048Tile_t tile);
+FT800Color_t U2048GetTextColor(U2048Tile_t tile);
 void U2048RenderStart(U2048_t *game);
 void U2048RenderBoard(U2048_t *game);
 void U2048RenderTiles(U2048_t *game);
@@ -99,9 +116,41 @@ FT800Color_t U2048GetTileColor(U2048Tile_t tile)
         case U2048Tile_Empty:
             return ColorEmpty;
         case U2048Tile_2:
-            return ColorTwo;
+            return Color2;
+        case U2048Tile_4:
+            return Color4;
+        case U2048Tile_8:
+            return Color8;
+        case U2048Tile_16:
+            return Color16;
+        case U2048Tile_32:
+            return Color32;
+        case U2048Tile_64:
+            return Color64;
+        case U2048Tile_128:
+            return Color128;
+        case U2048Tile_256:
+            return Color256;
+        case U2048Tile_512:
+            return Color512;
+        case U2048Tile_1024:
+            return Color1024;
+        case U2048Tile_2048:
+            return Color2048;
         default:
             return ColorDefault;
+    }
+}
+
+FT800Color_t U2048GetTextColor(U2048Tile_t tile)
+{
+    if(tile < U2048Tile_8)
+    {
+        return ColorTextDark;
+    }
+    else
+    {
+        return ColorTextBright;
     }
 }
 
@@ -149,6 +198,7 @@ void U2048RenderTiles(U2048_t *game)
             
             if(!FT800ColorsEqual(newColor, currentColor))
             {
+                currentColor = newColor;
                 FT800DlRgb(game->ft800, newColor);
             }
             
@@ -161,8 +211,14 @@ void U2048RenderTiles(U2048_t *game)
 
                 p1.X += U2048_TILE_SIZE / 2;
                 p1.Y += U2048_TILE_SIZE / 2;
-
-                FT800DlRgb(game->ft800, ColorWhite);
+                
+                FT800Color_t textColor = U2048GetTextColor(game->Tiles[i][j]);
+                
+                if(!FT800ColorsEqual(textColor, currentColor))
+                {
+                    currentColor = textColor;
+                    FT800DlRgb(game->ft800, textColor);
+                }
                 
                 FT800CmdDrawText(game->ft800, p1, FT800Font_AntiAliased3,
                         FT800Option_CenterX | FT800Option_CenterY,
