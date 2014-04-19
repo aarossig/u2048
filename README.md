@@ -26,7 +26,7 @@ rectangle from integer arguments.
 
 Once I had rectangles, it was simple to render a basic game 2048 game board.
 
-![Rendered Game](pictures/Rendered Game.jpg "Rendered Game")
+![Rendered Game](pictures/Rendered Game Board.jpg "Rendered Game")
 
 ### Text Rendering
 
