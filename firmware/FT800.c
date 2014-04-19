@@ -8,7 +8,6 @@
 
 void FT800Init(FT800_t *ft800)
 {
-    ft800->DisplayListAddress = FT800_DL_START;
     ft800->CommandAddress = 0;
 }
 
@@ -46,21 +45,16 @@ void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2)
 
 /* FT800 Display List *********************************************************/
 
-void FT800DlNew(FT800_t *ft800)
-{
-    ft800->DisplayListAddress = FT800_DL_START;
-}
-
 void FT800DlStartPrimitive(FT800_t *ft800, FT800PrimitiveType_t primitive)
 {
     uint8_t startPrimitive[] = { (primitive & 0x0F), 0x00, 0x00, 0x1F };
-    FT800DlCommand(ft800, startPrimitive);
+    FT800CoprocessorCommand(ft800, startPrimitive, 4);
 }
 
 void FT800DlEndPrimitive(FT800_t *ft800)
 {
     uint8_t endPrimitive[] = { 0x00, 0x00, 0x00, 0x21 };
-    FT800DlCommand(ft800, endPrimitive);
+    FT800CoprocessorCommand(ft800, endPrimitive, 4);
 }
 
 void FT800DlVertexI(FT800_t *ft800,
@@ -83,20 +77,20 @@ void FT800DlVertexI(FT800_t *ft800,
     vertex.arguments.y = y;
     vertex.arguments.x = x;
     vertex.arguments.cmd = 0x02;
-
-    FT800DlCommand(ft800, vertex.command);
+    
+    FT800CoprocessorCommand(ft800, vertex.command, 4);
 }
 
 void FT800DlClearRgb(FT800_t *ft800, FT800Color_t color)
 {
     uint8_t clearRgb[] = { color.Blue, color.Green, color.Red, 0x02 };
-    FT800DlCommand(ft800, clearRgb);
+    FT800CoprocessorCommand(ft800, clearRgb, 4);
 }
 
 void FT800DlRgb(FT800_t *ft800, FT800Color_t color)
 {
     uint8_t rgb[] = { color.Green, color.Blue, color.Red, 0x04 };
-    FT800DlCommand(ft800, rgb);
+    FT800CoprocessorCommand(ft800, rgb, 4);
 }
 
 void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf)
@@ -107,14 +101,14 @@ void FT800DlClearCSTBuffers(FT800_t *ft800, bool cBuf, bool sBuf, bool tBuf)
         0x00,
         0x26
     };
-
-    FT800DlCommand(ft800, clearBufs);
+    
+    FT800CoprocessorCommand(ft800, clearBufs, 4);
 }
 
 void FT800DlEnd(FT800_t *ft800)
 {
     uint8_t dlEnd[] = { 0x00, 0x00, 0x00, 0x00 };
-    FT800DlCommand(ft800, dlEnd);
+    FT800CoprocessorCommand(ft800, dlEnd, 4);
 }
 
 /* FT800 Coprocessor Commands *************************************************/
@@ -123,8 +117,6 @@ void FT800CmdNewDisplayList(FT800_t *ft800)
 {
     uint8_t newDisplayList[] = { 0x00, 0xFF, 0xFF, 0xFF };
     FT800CoprocessorCommand(ft800, newDisplayList, 4);
-    
-    ft800->DisplayListAddress = FT800_DL_START;
 }
 
 void FT800CmdSwapDisplayList(FT800_t *ft800)
@@ -136,6 +128,14 @@ void FT800CmdSwapDisplayList(FT800_t *ft800)
 void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
     FT800Option_t options, char *str, uint32_t length)
 {
+    uint32_t address = FT800_CMD_START + ft800->CommandAddress;
+
+    uint8_t addressBuf[] = {
+        ((address >> 16) & 0x3F) | 0x80,
+        (address >> 8) & 0xFF,
+        (address) & 0xFF
+    };
+    
     uint8_t showText[] = {
         0x0C, 0xFF, 0xFF, 0xFF,
         p.X, (p.X >> 8),
@@ -144,15 +144,16 @@ void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
         options, (options >> 8)
     };
 
-    uint8_t terminator[] = { 0x00 };
+    uint8_t terminator[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
 
     ft800->CsPort->Output.Port &= ~(1 << ft800->CsPin);
+    FT800SpiWrite(ft800, addressBuf, 3);
     FT800SpiWrite(ft800, showText, 12);
     FT800SpiWrite(ft800, (uint8_t *)str, length);
-    FT800SpiWrite(ft800, terminator, 1);
+    FT800SpiWrite(ft800, terminator, 4 - (length % 4));
     ft800->CsPort->Output.Port |= (1 << ft800->CsPin);
-
-    ft800->CommandAddress += 12 + length + 1;
+    
+    ft800->CommandAddress += 12 + length + (4 - (length % 4));
     ft800->CommandAddress %= 4096;
 }
 
@@ -178,7 +179,7 @@ void FT800CmdFlush(FT800_t *ft800)
     while(currentAddress != ft800->CommandAddress)
     {
         FT800Read(ft800, FT800Register_CMD_READ, addressBuf, 4);
-
+        
         currentAddress = addressBuf[0]
             | (addressBuf[1] << 8)
             | (addressBuf[2] << 16)
@@ -195,12 +196,6 @@ void FT800SendCommand(FT800_t *ft800, FT800Command_t command)
 }
 
 /* FT800 Memory Operations ****************************************************/
-
-void FT800DlCommand(FT800_t *ft800, uint8_t *buf)
-{
-    FT800Write(ft800, ft800->DisplayListAddress, buf, FT800_DL_CMD_LEN);
-    ft800->DisplayListAddress += FT800_DL_CMD_LEN;
-}
 
 void FT800CoprocessorCommand(FT800_t *ft800, uint8_t *buf, uint32_t length)
 {

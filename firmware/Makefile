@@ -37,7 +37,7 @@ OBJ_S = $(patsubst %.S, %.o, $(SRC_S))
 all : $(BIN).elf
 
 $(BIN).elf : $(OBJ_C) $(OBJ_S)
-	arm-none-eabi-gcc -T $(LINKER) $^ -nostartfiles -o $(BIN).elf
+	arm-none-eabi-gcc $(CFLAGS) -T $(LINKER) $^ -nostartfiles -o $(BIN).elf
 	arm-none-eabi-objdump -DS $(BIN).elf > $(BIN).dasm
 	arm-none-eabi-objcopy -O ihex $(BIN).elf $(BIN).hex
 

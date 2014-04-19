@@ -6,6 +6,7 @@
 #define U2048_H
 
 #include <stdint.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "FT800.h"

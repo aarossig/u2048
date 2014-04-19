@@ -16,6 +16,7 @@
 #define U2048_TILE_SPACING ((U2048_SIZE - (U2048_GAME_SIZE * U2048_TILE_SIZE)) \
                            / (U2048_GAME_SIZE + 1))
 
+const FT800Color_t ColorWhite = { .Red = 255, .Green = 255, .Blue = 255 };
 const FT800Color_t ColorBoard = { .Red = 187, .Green = 173, .Blue = 160 };
 const FT800Color_t ColorEmpty = { .Red = 119, .Green = 110, .Blue = 101 };
 const FT800Color_t ColorTwo = { .Red = 238, .Green = 228, .Blue = 218 };
@@ -54,19 +55,6 @@ void U2048GameRender(U2048_t *game)
     U2048RenderBoard(game);
     U2048RenderTiles(game);
     U2048RenderFinish(game);
-
-    for(int i = 0; i < U2048_GAME_SIZE; i++)
-    {
-        for(int j = 0; j < U2048_GAME_SIZE; j++)
-        {
-            U2048NewTile(game, j, i, U2048Tile_2);
-        }
-    }
-
-    U2048RenderStart(game);
-    U2048RenderBoard(game);
-    U2048RenderTiles(game);
-    U2048RenderFinish(game);
 }
 
 void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
@@ -79,7 +67,7 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
         
         FT800Color_t color = U2048GetTileColor(tile);
         FT800DlRgb(game->ft800, color);
-
+        
         FT800Point_t p1 = {
             .X = ((x + 1) * U2048_TILE_SPACING) + (x * U2048_TILE_SIZE)
                 + (U2048_TILE_SIZE / 2) - i - 1,
@@ -97,8 +85,6 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
         FT800DrawRectangle(game->ft800, p1, p2);
         
         U2048RenderFinish(game);
-        
-        for(volatile int i = 0; i < 5000; i++);
     }
 
     game->Tiles[x][y] = tile;
@@ -121,7 +107,7 @@ FT800Color_t U2048GetTileColor(U2048Tile_t tile)
 
 void U2048RenderStart(U2048_t *game)
 {
-    FT800DlNew(game->ft800);
+    FT800CmdNewDisplayList(game->ft800);
     FT800DlClearCSTBuffers(game->ft800, true, true, true);
 }
 
@@ -167,10 +153,20 @@ void U2048RenderTiles(U2048_t *game)
             }
             
             FT800DrawRectangle(game->ft800, p1, p2);
-
+            
             if(game->Tiles[i][j] != U2048Tile_Empty)
             {
-                // Render the number on the tile
+                char str[5];
+                sprintf(str, "%d", game->Tiles[i][j]);
+
+                p1.X += U2048_TILE_SIZE / 2;
+                p1.Y += U2048_TILE_SIZE / 2;
+
+                FT800DlRgb(game->ft800, ColorWhite);
+                
+                FT800CmdDrawText(game->ft800, p1, FT800Font_AntiAliased3,
+                        FT800Option_CenterX | FT800Option_CenterY,
+                        str, strlen(str));
             }
         }
     }

@@ -19,6 +19,10 @@ SECTIONS {
         *(.text*);
         *(.rodata*);
     } > flash
+
+    .ARM.exidx : {
+        *(.ARM.exidx*);
+    } > flash
     
     /* Initialized global and static variables are stored after .text
      */

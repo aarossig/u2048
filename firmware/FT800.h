@@ -11,7 +11,6 @@
 #include "SystemGpio.h"
 #include "SystemSpi.h"
 
-#define FT800_DL_START 0x100000
 #define FT800_DL_CMD_LEN 4
 #define FT800_CMD_START 0x108000
 #define FT800_CHIPID 0x7C
@@ -201,8 +200,6 @@ typedef enum FT800Command_t {
 void FT800SendCommand(FT800_t *ft800, FT800Command_t command);
 
 /* FT800 Memory Operations ****************************************************/
-
-void FT800DlCommand(FT800_t *ft800, uint8_t *buf);
 
 void FT800CoprocessorCommand(FT800_t *ft800, uint8_t *buf, uint32_t length);
 
