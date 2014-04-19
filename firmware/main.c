@@ -18,6 +18,19 @@
 int main(void)
 {
     SystemIrqEnable();
+
+    // Configure the PLL for 42MHz
+    SystemPll.PllPrescaler = 40;
+    SystemPll.Multiplier = 210;
+    SystemPll.SystemClockPrescaler = SystemPllMainPrescaler_2;
+    SystemPll.ClockSource = SystemPllClockSource_Hsi;
+    
+    bool pllEnabled = SystemClockEnable(SystemClockType_Pll);
+    while(!pllEnabled)
+    {
+        // Error switching to PLL clock source
+    }
+
     
     FT800_t ft800;
     if(!Gameduino2Init(&ft800))

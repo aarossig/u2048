@@ -28,7 +28,7 @@ bool Gameduino2Init(FT800_t *ft800)
     SystemSpi1.Config.SlaveManageEnable = true;
     SystemSpi1.Config.InternalSelect = true;
     SystemSpi1.Config.DeviceMode = SystemSpiDeviceMode_Master;
-    SystemSpi1.Config.Prescaler = SystemSpiPrescaler_2;
+    SystemSpi1.Config.Prescaler = SystemSpiPrescaler_4;
     SystemSpi1.Config.ClockPhase = SystemSpiClockPhase_First;
     SystemSpi1.Config.ClockIdle = SystemSpiClockIdle_Low;
     SystemSpi1.Config.Enabled = true;
@@ -43,6 +43,8 @@ bool Gameduino2Init(FT800_t *ft800)
     FT800SendCommand(ft800, FT800Command_Clock48);
     FT800SendCommand(ft800, FT800Command_Reset);
     for(volatile int i = 0; i < 10000; i++);
+
+    SystemSpi1.Config.Prescaler = SystemSpiPrescaler_2;
 
     uint8_t chipId = FT800ReadChipId(ft800);
 
