@@ -16,6 +16,7 @@
 /* Game Structs ***************************************************************/
 
 typedef enum U2048Tile_t {
+    U2048Tile_Undefined = -1,
     U2048Tile_Empty = 0,
     U2048Tile_2 = 2,
     U2048Tile_4 = 4,

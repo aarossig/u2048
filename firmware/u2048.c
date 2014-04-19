@@ -45,8 +45,11 @@ FT800Color_t U2048GetTextColor(U2048Tile_t tile);
 void U2048RenderStart(U2048_t *game);
 void U2048RenderBoard(U2048_t *game);
 void U2048RenderTiles(U2048_t *game);
+void U2048RenderTile(U2048_t *game, int x, int y);
 void U2048RenderTileString(U2048_t *game, U2048Tile_t tile, FT800Point_t p);
 void U2048RenderFinish(U2048_t *game);
+
+void U2048ActionRight(U2048_t *game);
 
 /* Game Functions *************************************************************/
 
@@ -105,6 +108,8 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
         }
         
         U2048RenderFinish(game);
+
+        for(volatile int i = 0; i < 1000; i++);
     }
     
     game->Tiles[x][y] = tile;
@@ -115,31 +120,146 @@ void U2048Action(U2048_t *game, U2048Action_t action)
     switch(action)
     {
         case U2048Action_SwipeRight:
-            for(int y = 0; y < U2048_GAME_SIZE; y++)
-            {
-                for(int x = U2048_GAME_SIZE - 1; x > 0; x--)
-                {
-                    if(game->Tiles[x][y] != U2048Tile_Empty
-                        && game->Tiles[x][y] == game->Tiles[x - 1][y])
-                    {
-                        // Handle 2048 situation, you win!
-                        game->Tiles[x][y] = U2048NextTile(game->Tiles[x][y]);
-                        
-                        for(int xSwap = x - 1; xSwap > 0; xSwap--)
-                        {
-                            game->Tiles[xSwap][y] = game->Tiles[xSwap - 1][y];
-                        }
-                        
-                        game->Tiles[0][y] = U2048Tile_Empty;
-                    }
-                }
-            }
-
-            // Randomly place a tile, mostly 2 sometimes 4 if tiles were moved
+            U2048ActionRight(game);
             break;
         default:
             break;
     }
+}
+
+void U2048ActionRight(U2048_t *game)
+{
+    for(int y = 0; y < U2048_GAME_SIZE; y++)
+    {
+        for(int x = U2048_GAME_SIZE - 1; x > 0; x--)
+        {
+            if(game->Tiles[x][y] != U2048Tile_Empty)
+            {
+                if(game->Tiles[x][y] == game->Tiles[x - 1][y])
+                {
+                    for(int cnt = 0;
+                        cnt < U2048_TILE_SIZE + U2048_TILE_SPACING; cnt++)
+                    {
+                        U2048RenderStart(game);
+                        U2048RenderBoard(game);
+                        
+                        for(int i = 0; i < U2048_GAME_SIZE; i++)
+                        {
+                            for(int j = 0; j < U2048_GAME_SIZE; j++)
+                            {
+                                if(j != y || i >= x)
+                                {
+                                    U2048RenderTile(game, i, j);
+                                }
+                                else
+                                {
+                                    FT800Point_t p1 = {
+              .X = ((i + 1) * U2048_TILE_SPACING) + (i * U2048_TILE_SIZE) + cnt,
+              .Y = ((j + 1) * U2048_TILE_SPACING) + (j * U2048_TILE_SIZE),
+                                    };
+
+                                    FT800Point_t p2 = {
+                        .X = p1.X + U2048_TILE_SIZE,
+                        .Y = p1.Y + U2048_TILE_SIZE
+                                    };
+
+                  FT800Color_t tileColor = U2048GetTileColor(game->Tiles[i][j]);
+                  FT800DlRgb(game->ft800, tileColor);
+                  FT800DrawRectangle(game->ft800, p1, p2);
+                  U2048RenderTileString(game, game->Tiles[i][j], p1);
+                                }
+                            }
+                        }
+                        
+                        U2048RenderFinish(game);
+
+                        if(cnt == (U2048_TILE_SIZE + U2048_TILE_SPACING - 1))
+                        {
+                            for(int xSwap = x - 1; xSwap > 0; xSwap--)
+                            {
+                              game->Tiles[xSwap][y] = game->Tiles[xSwap - 1][y];
+                            }
+                            
+                            game->Tiles[0][y] = U2048Tile_Undefined;
+                            
+                         U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+                            U2048NewTile(game, x, y, newTile);
+                            U2048NewTile(game, 0, y, U2048Tile_Empty);
+
+                            // Handle 2048 situation, you win!
+                        }
+                    }
+                }
+            }
+            else
+            {
+                bool emptyRow = true;
+                
+                for(int i = x - 1; i >= 0; i--)
+                {
+                    if(game->Tiles[i][y] != U2048Tile_Empty)
+                    {
+                        emptyRow = false;
+                        break;
+                    }
+                }
+
+                while(game->Tiles[x][y] == U2048Tile_Empty && !emptyRow)
+                {
+                for(int cnt = 0;
+                    cnt < U2048_TILE_SIZE + U2048_TILE_SPACING; cnt++)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = U2048_GAME_SIZE - 1; i >= 0; i--)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            if(j != y || i >= x)
+                            {
+                                U2048RenderTile(game, i, j);
+                            }
+                            else
+                            {
+                                FT800Point_t p1 = {
+          .X = ((i + 1) * U2048_TILE_SPACING) + (i * U2048_TILE_SIZE) + cnt,
+          .Y = ((j + 1) * U2048_TILE_SPACING) + (j * U2048_TILE_SIZE),
+                                };
+
+                                FT800Point_t p2 = {
+                    .X = p1.X + U2048_TILE_SIZE,
+                    .Y = p1.Y + U2048_TILE_SIZE
+                                };
+
+              FT800Color_t tileColor = U2048GetTileColor(game->Tiles[i][j]);
+              FT800DlRgb(game->ft800, tileColor);
+              FT800DrawRectangle(game->ft800, p1, p2);
+              U2048RenderTileString(game, game->Tiles[i][j], p1);
+                            }
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+
+                    if(cnt == (U2048_TILE_SIZE + U2048_TILE_SPACING - 1))
+                    {
+                        for(int xSwap = x; xSwap > 0; xSwap--)
+                        {
+                          game->Tiles[xSwap][y] = game->Tiles[xSwap - 1][y];
+                        }
+                        
+                        game->Tiles[0][y] = U2048Tile_Undefined;
+                        
+                        U2048NewTile(game, 0, y, U2048Tile_Empty);
+                    }
+                }
+                }
+            }
+        }
+    }
+
+    // Randomly place a tile, mostly 2 sometimes 4 if tiles were moved
 }
 
 U2048Tile_t U2048NextTile(U2048Tile_t tile)
@@ -233,22 +353,29 @@ void U2048RenderTiles(U2048_t *game)
     {
         for(int j = 0; j < U2048_GAME_SIZE; j++)
         {
-            FT800Point_t p1 = {
-                .X = ((i + 1) * U2048_TILE_SPACING) + (i * U2048_TILE_SIZE),
-                .Y = ((j + 1) * U2048_TILE_SPACING) + (j * U2048_TILE_SIZE),
-            };
-
-            FT800Point_t p2 = {
-                .X = p1.X + U2048_TILE_SIZE,
-                .Y = p1.Y + U2048_TILE_SIZE
-            };
-            
-            FT800Color_t tileColor = U2048GetTileColor(game->Tiles[i][j]);
-            FT800DlRgb(game->ft800, tileColor);
-            FT800DrawRectangle(game->ft800, p1, p2);
-            
-            U2048RenderTileString(game, game->Tiles[i][j], p1);
+            U2048RenderTile(game, i, j);
         }
+    }
+}
+
+void U2048RenderTile(U2048_t *game, int x, int y)
+{
+    if(game->Tiles[x][y] != U2048Tile_Undefined)
+    {
+        FT800Point_t p1 = {
+            .X = ((x + 1) * U2048_TILE_SPACING) + (x * U2048_TILE_SIZE),
+            .Y = ((y + 1) * U2048_TILE_SPACING) + (y * U2048_TILE_SIZE),
+        };
+
+        FT800Point_t p2 = {
+            .X = p1.X + U2048_TILE_SIZE,
+            .Y = p1.Y + U2048_TILE_SIZE
+        };
+        
+        FT800Color_t tileColor = U2048GetTileColor(game->Tiles[x][y]);
+        FT800DlRgb(game->ft800, tileColor);
+        FT800DrawRectangle(game->ft800, p1, p2);
+        U2048RenderTileString(game, game->Tiles[x][y], p1);
     }
 }
 

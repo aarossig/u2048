@@ -42,22 +42,13 @@ int main(void)
     U2048Init(&u2048, &ft800);
     U2048GameRender(&u2048);
     
-    for(int i = 0; i < U2048_GAME_SIZE; i++)
-    {
-        U2048NewTile(&u2048, i, 3, U2048Tile_2);
-    }
-
-    for(int i = 0; i < 1000000; i++);
-
-    U2048Action(&u2048, U2048Action_SwipeRight);
-    U2048GameRender(&u2048);
-    for(int i = 0; i < 1000000; i++);
-
-    U2048Action(&u2048, U2048Action_SwipeRight);
-    U2048GameRender(&u2048);
-    for(int i = 0; i < 1000000; i++);
+    U2048NewTile(&u2048, 1, 1, U2048Tile_4);
+    U2048NewTile(&u2048, 0, 3, U2048Tile_2);
+    U2048NewTile(&u2048, 2, 3, U2048Tile_4);
+    U2048NewTile(&u2048, 3, 3, U2048Tile_4);
     
-    U2048GameRender(&u2048);
+    U2048Action(&u2048, U2048Action_SwipeRight);
+    //U2048Action(&u2048, U2048Action_SwipeRight);
     
     while(1);
     

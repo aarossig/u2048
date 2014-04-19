@@ -115,11 +115,8 @@ void FT800DlEnd(FT800_t *ft800)
 
 void FT800CmdNewDisplayList(FT800_t *ft800)
 {
-    uint8_t clearDisplayList[] = { 0x00, 0x00 };
-    FT800Write(ft800, FT800Register_CMD_DL, clearDisplayList, 2);
-    
-    // TODO: Find out how to delay until the display list is cleared.
-    for(int i = 0; i < 100; i++);
+    uint8_t newDisplayList[] = { 0x00, 0x00 };
+    FT800Write(ft800, FT800Register_CMD_DL, newDisplayList, 2);
 }
 
 void FT800CmdSwapDisplayList(FT800_t *ft800)
