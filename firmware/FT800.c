@@ -115,8 +115,8 @@ void FT800DlEnd(FT800_t *ft800)
 
 void FT800CmdNewDisplayList(FT800_t *ft800)
 {
-    uint8_t newDisplayList[] = { 0x00, 0xFF, 0xFF, 0xFF };
-    FT800CoprocessorCommand(ft800, newDisplayList, 4);
+    uint8_t clearDisplayList[] = { 0x00, 0x00, 0x00 };
+    FT800Write(ft800, FT800Register_CMD_DL, clearDisplayList, 2);
 }
 
 void FT800CmdSwapDisplayList(FT800_t *ft800)
@@ -175,7 +175,7 @@ void FT800CmdFlush(FT800_t *ft800)
     
     uint8_t addressBuf[4];
     uint32_t currentAddress = 0;
-    
+
     while(currentAddress != ft800->CommandAddress)
     {
         FT800Read(ft800, FT800Register_CMD_READ, addressBuf, 4);

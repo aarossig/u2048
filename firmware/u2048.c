@@ -235,5 +235,3 @@ void U2048RenderFinish(U2048_t *game)
     FT800CmdFlush(game->ft800);
 }
 
-
-
