@@ -30,6 +30,13 @@ typedef enum U2048Tile_t {
     U2048Tile_2048 = 2048
 } U2048Tile_t;
 
+typedef enum U2048Action_t {
+    U2048Action_SwipeRight,
+    U2048Action_SwipeDown,
+    U2048Action_SwipeUp,
+    U2048Action_SwipeLeft
+} U2048Action_t;
+
 typedef struct U2048_t {
     uint32_t Score;
     U2048Tile_t Tiles[U2048_GAME_SIZE][U2048_GAME_SIZE];
@@ -40,5 +47,9 @@ typedef struct U2048_t {
 
 void U2048Init(U2048_t *game, FT800_t *ft800);
 void U2048GameRender(U2048_t *game);
+void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile);
+void U2048Action(U2048_t *game, U2048Action_t action);
+
+U2048Tile_t U2048NextTile(U2048Tile_t tile);
 
 #endif

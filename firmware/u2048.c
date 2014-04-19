@@ -45,12 +45,10 @@ FT800Color_t U2048GetTextColor(U2048Tile_t tile);
 void U2048RenderStart(U2048_t *game);
 void U2048RenderBoard(U2048_t *game);
 void U2048RenderTiles(U2048_t *game);
+void U2048RenderTileString(U2048_t *game, U2048Tile_t tile, FT800Point_t p);
 void U2048RenderFinish(U2048_t *game);
 
-void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile);
-
 /* Game Functions *************************************************************/
-
 
 void U2048Init(U2048_t *game, FT800_t *ft800)
 {
@@ -101,10 +99,63 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
 
         FT800DrawRectangle(game->ft800, p1, p2);
         
+        if(i == ((U2048_TILE_SIZE / 2)) - 1)
+        {
+            U2048RenderTileString(game, tile, p1);
+        }
+        
         U2048RenderFinish(game);
     }
-
+    
     game->Tiles[x][y] = tile;
+}
+
+void U2048Action(U2048_t *game, U2048Action_t action)
+{
+    switch(action)
+    {
+        case U2048Action_SwipeRight:
+            for(int y = 0; y < U2048_GAME_SIZE; y++)
+            {
+                for(int x = U2048_GAME_SIZE - 1; x > 0; x--)
+                {
+                    if(game->Tiles[x][y] != U2048Tile_Empty
+                        && game->Tiles[x][y] == game->Tiles[x - 1][y])
+                    {
+                        // Handle 2048 situation, you win!
+                        game->Tiles[x][y] = U2048NextTile(game->Tiles[x][y]);
+                        
+                        for(int xSwap = x - 1; xSwap > 0; xSwap--)
+                        {
+                            game->Tiles[xSwap][y] = game->Tiles[xSwap - 1][y];
+                        }
+                        
+                        game->Tiles[0][y] = U2048Tile_Empty;
+                    }
+                }
+            }
+
+            // Randomly place a tile, mostly 2 sometimes 4 if tiles were moved
+            break;
+        default:
+            break;
+    }
+}
+
+U2048Tile_t U2048NextTile(U2048Tile_t tile)
+{
+    if(tile == U2048Tile_Empty)
+    {
+        return U2048Tile_2;
+    }
+    else if(tile < U2048Tile_2048)
+    {
+        return tile * 2;
+    }
+    else
+    {
+        return U2048Tile_2048;
+    }
 }
 
 /* Render Functions ***********************************************************/
@@ -178,8 +229,6 @@ void U2048RenderBoard(U2048_t *game)
 
 void U2048RenderTiles(U2048_t *game)
 {
-    FT800Color_t currentColor = { .Red = 0, .Green = 0, .Blue = 0 };
-    
     for(int i = 0; i < U2048_GAME_SIZE; i++)
     {
         for(int j = 0; j < U2048_GAME_SIZE; j++)
@@ -194,37 +243,31 @@ void U2048RenderTiles(U2048_t *game)
                 .Y = p1.Y + U2048_TILE_SIZE
             };
             
-            FT800Color_t newColor = U2048GetTileColor(game->Tiles[i][j]);
-            
-            if(!FT800ColorsEqual(newColor, currentColor))
-            {
-                currentColor = newColor;
-                FT800DlRgb(game->ft800, newColor);
-            }
-            
+            FT800Color_t tileColor = U2048GetTileColor(game->Tiles[i][j]);
+            FT800DlRgb(game->ft800, tileColor);
             FT800DrawRectangle(game->ft800, p1, p2);
             
-            if(game->Tiles[i][j] != U2048Tile_Empty)
-            {
-                char str[5];
-                sprintf(str, "%d", game->Tiles[i][j]);
-
-                p1.X += U2048_TILE_SIZE / 2;
-                p1.Y += U2048_TILE_SIZE / 2;
-                
-                FT800Color_t textColor = U2048GetTextColor(game->Tiles[i][j]);
-                
-                if(!FT800ColorsEqual(textColor, currentColor))
-                {
-                    currentColor = textColor;
-                    FT800DlRgb(game->ft800, textColor);
-                }
-                
-                FT800CmdDrawText(game->ft800, p1, FT800Font_AntiAliased3,
-                        FT800Option_CenterX | FT800Option_CenterY,
-                        str, strlen(str));
-            }
+            U2048RenderTileString(game, game->Tiles[i][j], p1);
         }
+    }
+}
+
+void U2048RenderTileString(U2048_t *game, U2048Tile_t tile, FT800Point_t p)
+{
+    if(tile != U2048Tile_Empty)
+    {
+        char str[5];
+        sprintf(str, "%d", tile);
+        
+        p.X += U2048_TILE_SIZE / 2;
+        p.Y += U2048_TILE_SIZE / 2;
+        
+        FT800Color_t textColor = U2048GetTextColor(tile);
+        FT800DlRgb(game->ft800, textColor);
+        
+        FT800CmdDrawText(game->ft800, p, FT800Font_AntiAliased3,
+                FT800Option_CenterX | FT800Option_CenterY,
+                str, strlen(str));
     }
 }
 
