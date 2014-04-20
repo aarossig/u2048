@@ -43,6 +43,79 @@ void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2)
     FT800DlEndPrimitive(ft800);
 }
 
+/* FT800 Touchscreen **********************************************************/
+
+void FT800GetTouchGesture(FT800_t *ft800, FT800GestureDetail_t *detail)
+{
+    FT800TouchDetail_t t1 = { .State = FT800TouchState_NotTouched };
+    FT800TouchDetail_t t2;
+    FT800TouchDetail_t tmp;
+    
+    while(t1.State == FT800TouchState_NotTouched)
+    {
+        FT800ReadTouchState(ft800, &t1);
+
+        if(t1.State == FT800TouchState_NotTouched)
+        {
+            detail->Gesture = FT800Gesture_None;
+            return;
+        }
+    }
+    
+    FT800ReadTouchState(ft800, &tmp);
+    while(tmp.State == FT800TouchState_Touched)
+    {
+        t2 = tmp;
+        FT800ReadTouchState(ft800, &tmp);
+    }
+
+    int deltaX = t2.X - t1.X;
+    int deltaY = t2.Y - t1.Y;
+    int absX = deltaX < 0 ? -deltaX : deltaX;
+    int absY = deltaY < 0 ? -deltaY : deltaY;
+    
+    detail->Position.X = t1.X;
+    detail->Position.Y = t1.Y;
+
+    if(absX > absY && absX > FT800_SWIPE_X)
+    {
+        if(deltaX < 0)
+            detail->Gesture = FT800Gesture_SwipeLeft;
+        else
+            detail->Gesture = FT800Gesture_SwipeRight;
+    }
+    else if(absX <= absY && absY > FT800_SWIPE_Y)
+    {
+        if(deltaY < 0)
+            detail->Gesture = FT800Gesture_SwipeDown;
+        else
+            detail->Gesture = FT800Gesture_SwipeUp;
+    }
+    else
+    {
+        detail->Gesture = FT800Gesture_Touch;
+    }
+}
+
+void FT800ReadTouchState(FT800_t *ft800, FT800TouchDetail_t *detail)
+{
+    uint8_t touchBuf[4];
+    FT800Read(ft800, FT800Register_TOUCH_DIRECT_XY, touchBuf, 4);
+    
+    if(touchBuf[3] & 0x80)
+    {
+        detail->State = FT800TouchState_NotTouched;
+        detail->X = 0;
+        detail->Y = 0;
+    }
+    else
+    {
+        detail->State = FT800TouchState_Touched;
+        detail->Y = touchBuf[0] | ((touchBuf[1] & 0x03) << 8);
+        detail->X = touchBuf[2] | ((touchBuf[3] & 0x03) << 8);
+    }
+}
+
 /* FT800 Display List *********************************************************/
 
 void FT800DlStartPrimitive(FT800_t *ft800, FT800PrimitiveType_t primitive)
@@ -129,7 +202,7 @@ void FT800CmdSwapDisplayList(FT800_t *ft800)
 }
 
 void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
-    FT800Option_t options, char *str, uint32_t length)
+    FT800Option_t options, const char *str, uint32_t length)
 {
     uint32_t address = FT800_CMD_START + ft800->CommandAddress;
 

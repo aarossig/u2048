@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "SystemResetClock.h"
 #include "SystemInterrupts.h"
@@ -30,7 +31,6 @@ int main(void)
     {
         // Error switching to PLL clock source
     }
-
     
     FT800_t ft800;
     if(!Gameduino2Init(&ft800))
@@ -38,61 +38,39 @@ int main(void)
         // Error communicating with the Gameduino
     }
 
-    FT800Color_t strColor = { .Red = 255, .Green = 255, .Blue = 255 };
-    FT800Point_t strPoint = { .X = 10, .Y = 10 };
-    
-    char *touch = "Touch";
-    char *noTouch = "No Touch";
-
-    char *touchStatus = NULL;
-    char *touchCoords[20];
-    
+    /*
     while(1)
     {
-        uint8_t touchBuf[4];
-        FT800Read(&ft800, FT800Register_TOUCH_DIRECT_XY, touchBuf, 4);
+        FT800Color_t textColor = { .Red = 255, .Green = 255, .Blue = 255 };
+        FT800Point_t p = { .X = 100, .Y = 100 };
         
-        if(touchBuf[3] & 0x80)
-        {
-            touchStatus = noTouch;
-        }
-        else
-        {
-            touchStatus = touch;
-        }
+        int i = rand();
         
-        uint16_t touchY = touchBuf[0] | ((touchBuf[1] & 0x03) << 8);
-        uint16_t touchX = touchBuf[2] | ((touchBuf[3] & 0x03) << 8);
-        
-        sprintf(touchCoords, "X: %03d Y: %03d", touchX, touchY);
-
         FT800CmdNewDisplayList(&ft800);
-        
         FT800DlClearCSTBuffers(&ft800, true, true, true);
-        FT800DlRgb(&ft800, strColor);
+        FT800DlRgb(&ft800, textColor);
+
+        char str[20];
+
+        sprintf(str, "%d", i);
         
-        strPoint.Y = 10;
+        FT800CmdDrawText(&ft800, p, FT800Font_AntiAliased3,
+                FT800Option_CenterX | FT800Option_CenterY,
+                str, strlen(str));
 
-        FT800CmdDrawText(&ft800, strPoint, FT800Font_AntiAliased3,
-            FT800Option_None, touchStatus, strlen(touchStatus));
-
-        strPoint.Y += 60;
-
-        FT800CmdDrawText(&ft800, strPoint, FT800Font_AntiAliased3,
-            FT800Option_None, touchCoords, strlen(touchCoords));
-        
         FT800DlEnd(&ft800);
         FT800CmdSwapDisplayList(&ft800);
         FT800CmdFlush(&ft800);
+
+        for(int i = 0; i < 1000000; i++);
     }
+    */
     
-    /*
     U2048_t u2048;
     U2048Init(&u2048, &ft800);
     U2048GameRender(&u2048);
-
-    for(int i = 0; i < 1000000; i++);
     
+    // Create a bunch of tiles
     U2048NewTile(&u2048, 1, 0, U2048Tile_16);
     U2048NewTile(&u2048, 3, 1, U2048Tile_32);
     U2048NewTile(&u2048, 3, 2, U2048Tile_32);
@@ -102,18 +80,30 @@ int main(void)
     U2048NewTile(&u2048, 1, 3, U2048Tile_4);
     U2048NewTile(&u2048, 2, 3, U2048Tile_4);
     U2048NewTile(&u2048, 3, 3, U2048Tile_4);
-
-    for(int i = 0; i < 1000000; i++);
-    U2048Action(&u2048, U2048Action_SwipeRight);
-    for(int i = 0; i < 1000000; i++);
-    U2048Action(&u2048, U2048Action_SwipeLeft);
-    for(int i = 0; i < 1000000; i++);
-    U2048Action(&u2048, U2048Action_SwipeUp);
-    for(int i = 0; i < 1000000; i++);
-    U2048Action(&u2048, U2048Action_SwipeDown);
-    */
     
-    while(1);
+    while(1)
+    {
+        FT800GestureDetail_t detail;
+        FT800GetTouchGesture(&ft800, &detail);
+
+        switch(detail.Gesture)
+        {
+            case FT800Gesture_SwipeUp:
+                U2048Action(&u2048, U2048Action_SwipeUp);
+                break;
+            case FT800Gesture_SwipeDown:
+                U2048Action(&u2048, U2048Action_SwipeDown);
+                break;
+            case FT800Gesture_SwipeLeft:
+                U2048Action(&u2048, U2048Action_SwipeLeft);
+                break;
+            case FT800Gesture_SwipeRight:
+                U2048Action(&u2048, U2048Action_SwipeRight);
+                break;
+            default:
+                break;
+        }
+    }
     
     return 0;
 }

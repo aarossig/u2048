@@ -39,7 +39,7 @@ typedef enum U2048Action_t {
 } U2048Action_t;
 
 typedef struct U2048_t {
-    uint32_t Score;
+    int Score;
     U2048Tile_t Tiles[U2048_GAME_SIZE][U2048_GAME_SIZE];
     FT800_t *ft800;
 } U2048_t;

@@ -21,6 +21,10 @@
 #define U2048_NEW_TILE_STEP 2
 #define U2048_TILE_MOVE_STEP 8
 
+/* String Literals ************************************************************/
+
+const char *StrScoreTitle = "Score";
+
 /* Game Colors ****************************************************************/
 
 const FT800Color_t ColorBoard = { .Red = 187, .Green = 173, .Blue = 160 };
@@ -40,8 +44,14 @@ const FT800Color_t Color2048 = { .Red = 237, .Green = 194, .Blue = 46 };
 
 const FT800Color_t ColorTextDark = { .Red = 119, .Green = 110, .Blue = 101 };
 const FT800Color_t ColorTextBright = { .Red = 249, .Green = 246, .Blue = 242 };
+const FT800Color_t ColorTextTitle = { .Red = 255, .Green = 255, .Blue = 255 };
 
 const FT800Color_t ColorDefault = { .Red = 0, .Green = 255, .Blue = 255 };
+
+/* Points *********************************************************************/
+
+const FT800Point_t PointScoreTitle = { .X = U2048_SIZE + 20, .Y = 20 };
+const FT800Point_t PointScoreValue = { .X = U2048_SIZE + 20, .Y = 50 };
 
 /* Render Functions ***********************************************************/
 
@@ -54,9 +64,8 @@ void U2048RenderTile(U2048_t *game,
     FT800Point_t p1, FT800Point_t p2, U2048Tile_t tile);
 void U2048GetTileCorners(FT800Point_t *p1, FT800Point_t *p2, int x, int y);
 void U2048RenderTileString(U2048_t *game, U2048Tile_t tile, FT800Point_t p);
+void U2048RenderScore(U2048_t *game);
 void U2048RenderFinish(U2048_t *game);
-
-void U2048ActionRight(U2048_t *game);
 
 /* Game Functions *************************************************************/
 
@@ -118,6 +127,13 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
     }
     
     game->Tiles[x][y] = tile;
+}
+
+void U2048PlaceNextTile(U2048_t *game, int x, int y)
+{
+    U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+    U2048NewTile(game, x, y, newTile);
+    game->Score += newTile;
 }
 
 void U2048JustifyRight(U2048_t *game)
@@ -231,9 +247,7 @@ void U2048MergeRight(U2048_t *game)
 
                         game->Tiles[0][y] = U2048Tile_Undefined;
                         U2048NewTile(game, 0, y, U2048Tile_Empty);
-                        
-                        U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
-                        U2048NewTile(game, x, y, newTile);
+                        U2048PlaceNextTile(game, x, y);
                     }
                 }
             }
@@ -350,11 +364,11 @@ void U2048MergeLeft(U2048_t *game)
                             game->Tiles[xSwap][y] = swap;
                         }
 
-                       game->Tiles[U2048_TILE_COUNT][y] = U2048Tile_Undefined;
-                       U2048NewTile(game, U2048_TILE_COUNT, y, U2048Tile_Empty);
+                        game->Tiles[U2048_TILE_COUNT][y] = U2048Tile_Undefined;
+                        U2048NewTile(game,
+                            U2048_TILE_COUNT, y, U2048Tile_Empty);
                         
-                       U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
-                       U2048NewTile(game, x, y, newTile);
+                        U2048PlaceNextTile(game, x, y);
                     }
                 }
             }
@@ -476,6 +490,7 @@ void U2048MergeUp(U2048_t *game)
                         
                        U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
                        U2048NewTile(game, x, y, newTile);
+                       game->Score += newTile;
                     }
                 }
             }
@@ -597,6 +612,7 @@ void U2048MergeDown(U2048_t *game)
                         
                        U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
                        U2048NewTile(game, x, y, newTile);
+                       game->Score += newTile;
                     }
                 }
             }
@@ -631,6 +647,8 @@ void U2048Action(U2048_t *game, U2048Action_t action)
     }
     
     // Randomly place a tile, mostly 2 sometimes 4 if tiles were moved
+    
+    U2048GameRender(game);
 }
 
 U2048Tile_t U2048NextTile(U2048Tile_t tile)
@@ -773,8 +791,23 @@ void U2048RenderTileString(U2048_t *game, U2048Tile_t tile, FT800Point_t p)
     }
 }
 
+void U2048RenderScore(U2048_t *game)
+{
+    FT800DlRgb(game->ft800, ColorTextTitle);
+
+    FT800CmdDrawText(game->ft800, PointScoreTitle, FT800Font_AntiAliased4,
+        FT800Option_None, StrScoreTitle, strlen(StrScoreTitle));
+
+    char scoreBuf[20];
+    sprintf(scoreBuf, "%d", game->Score);
+
+    FT800CmdDrawText(game->ft800, PointScoreValue, FT800Font_AntiAliased3,
+        FT800Option_None, scoreBuf, strlen(scoreBuf));
+}
+
 void U2048RenderFinish(U2048_t *game)
 {
+    U2048RenderScore(game);
     FT800DlEnd(game->ft800);
     FT800CmdSwapDisplayList(game->ft800);
     FT800CmdFlush(game->ft800);

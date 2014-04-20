@@ -15,6 +15,9 @@
 #define FT800_CMD_START 0x108000
 #define FT800_CHIPID 0x7C
 
+#define FT800_SWIPE_X 300
+#define FT800_SWIPE_Y 300
+
 /* FT800 Instance *************************************************************/
 
 typedef enum FT800PrimitiveType_t {
@@ -54,6 +57,20 @@ typedef enum FT800Font_t {
     FT800Font_AntiAliased6
 } FT800Font_t;
 
+typedef enum FT800TouchState_t {
+    FT800TouchState_NotTouched,
+    FT800TouchState_Touched
+} FT800TouchState_t;
+
+typedef enum FT800Gesture_t {
+    FT800Gesture_None,
+    FT800Gesture_SwipeUp,
+    FT800Gesture_SwipeDown,
+    FT800Gesture_SwipeLeft,
+    FT800Gesture_SwipeRight,
+    FT800Gesture_Touch
+} FT800Gesture_t;
+
 typedef struct FT800Point_t {
     int16_t X;
     int16_t Y;
@@ -64,6 +81,17 @@ typedef struct FT800Color_t {
     uint8_t Green;
     uint8_t Blue;
 } FT800Color_t;
+
+typedef struct FT800TouchDetail_t {
+    FT800TouchState_t State;
+    uint16_t X;
+    uint16_t Y;
+} FT800TouchDetail_t;
+
+typedef struct FT800GestureDetail_t {
+    FT800Gesture_t Gesture;
+    FT800Point_t Position;
+} FT800GestureDetail_t;
 
 typedef struct FT800_t {
     volatile SystemSpiModule_t *Spi;
@@ -163,6 +191,11 @@ void FT800SwapDisplayList(FT800_t *ft800);
 
 void FT800DrawRectangle(FT800_t *ft800, FT800Point_t p1, FT800Point_t p2);
 
+/* FT800 Touchscreen **********************************************************/
+
+void FT800GetTouchGesture(FT800_t *ft800, FT800GestureDetail_t *detail);
+void FT800ReadTouchState(FT800_t *ft800, FT800TouchDetail_t *detail);
+
 /* FT800 Display List *********************************************************/
 
 void FT800DlNew(FT800_t *ft800);
@@ -181,7 +214,7 @@ void FT800DlSwap(FT800_t *ft800);
 void FT800CmdNewDisplayList(FT800_t *ft800);
 void FT800CmdSwapDisplayList(FT800_t *ft800);
 void FT800CmdDrawText(FT800_t *ft800, FT800Point_t p, FT800Font_t font,
-    FT800Option_t options, char *str, uint32_t length);
+    FT800Option_t options, const char *str, uint32_t length);
 void FT800CmdLogo(FT800_t *ft800);
 void FT800CmdFlush(FT800_t *ft800);
 
