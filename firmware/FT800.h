@@ -30,6 +30,7 @@ typedef enum FT800PrimitiveType_t {
 } FT800PrimitiveType_t;
 
 typedef enum FT800Option_t {
+    FT800Option_None    = 0,
     FT800Option_CenterX = 512,
     FT800Option_CenterY = 1024
 } FT800Option_t;

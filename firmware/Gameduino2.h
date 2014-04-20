@@ -5,6 +5,7 @@
 #ifndef GAMEDUINO2_H
 #define GAMEDUINO2_H
 
+#include "SystemResetClock.h"
 #include "FT800.h"
 
 /* Initialization *************************************************************/

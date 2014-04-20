@@ -16,6 +16,10 @@
 #define U2048_TILE_SPACING ((U2048_SIZE - (U2048_GAME_SIZE * U2048_TILE_SIZE)) \
                            / (U2048_GAME_SIZE + 1))
 #define U2048_TILE_DELTA (U2048_TILE_SIZE + U2048_TILE_SPACING)
+#define U2048_TILE_COUNT (U2048_GAME_SIZE - 1)
+
+#define U2048_NEW_TILE_STEP 2
+#define U2048_TILE_MOVE_STEP 8
 
 /* Game Colors ****************************************************************/
 
@@ -80,7 +84,7 @@ void U2048GameRender(U2048_t *game)
 
 void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
 {
-    for(int i = 0; i < (U2048_TILE_SIZE / 2); i++)
+    for(int i = 0; i < (U2048_TILE_SIZE / 2); i += U2048_NEW_TILE_STEP)
     {
         U2048RenderStart(game);
         U2048RenderBoard(game);
@@ -111,297 +115,519 @@ void U2048NewTile(U2048_t *game, int x, int y, U2048Tile_t tile)
         }
         
         U2048RenderFinish(game);
-
-        for(volatile int i = 0; i < 1000; i++);
     }
     
     game->Tiles[x][y] = tile;
 }
 
-bool U2048RowIsEmpty(U2048_t *game, int xStart, int xStop, int y)
+void U2048JustifyRight(U2048_t *game)
 {
-    for(int x = xStart; x < xStop; x++)
+    for(int y = 0; y < U2048_GAME_SIZE; y++)
     {
-        if(game->Tiles[x][y] != U2048Tile_Empty)
+        for(int x = U2048_TILE_COUNT; x > 0; x--)
         {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool U2048ColumnIsEmpty(U2048_t *game, int x, int yStart, int yStop)
-{
-    for(int y = yStart; y < yStop; y++)
-    {
-        if(game->Tiles[x][y] != U2048Tile_Empty)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool U2048MoveTiles(U2048_t *game, U2048Action_t action)
-{
-    bool fullyMerged = true;
-
-    int startX, y, dX, dY;
-
-    if(action == U2048Action_SwipeLeft)
-    {
-        dX = -1;
-        dY = 0;
-        startX = 0;
-        y = 0;
-    }
-    else if(action == U2048Action_SwipeUp)
-    {
-        dX = 0;
-        dY = 1;
-        startX = 0;
-        y = 0;
-    }
-    else if(action == U2048Action_SwipeRight)
-    {
-        dX = 1;
-        dY = 0;
-        startX = U2048_GAME_SIZE - 1;
-        y = 0;
-    }
-    else if(action == U2048Action_SwipeDown)
-    {
-        dX = 0;
-        dY = 1;
-        startX = 0;
-        y = U2048_GAME_SIZE - 1;
-    }
-    else
-    {
-        return false;
-    }
-    
-    while((action == U2048Action_SwipeDown && y > 0)
-        || (action != U2048Action_SwipeDown && y < U2048_GAME_SIZE))
-    {
-        int x = startX;
-
-        bool empty = false;
-        
-        if(action == U2048Action_SwipeRight || action == U2048Action_SwipeLeft)
-        {
-            empty = U2048RowIsEmpty(game, 0, U2048_GAME_SIZE, y);
-        }
-        
-        while(!empty && ((action == U2048Action_SwipeRight && x > 0)
-            || (action != U2048Action_SwipeRight && x < U2048_GAME_SIZE)))
-        {
-            bool colEmpty = false;
-            
-            if(action == U2048Action_SwipeDown || action == U2048Action_SwipeUp)
+            if(game->Tiles[x][y] == U2048Tile_Empty)
             {
-                colEmpty = U2048ColumnIsEmpty(game, x, 0, U2048_GAME_SIZE);
-            }
-            
-            if(!colEmpty)
-            {
-                if(game->Tiles[x][y] != U2048Tile_Empty
-                    && game->Tiles[x][y] == game->Tiles[x - dX][y - dY])
+                bool emptyToEnd = true;
+                for(int i = 0; i < x; i++)
                 {
-                    for(int f = 0; f < U2048_TILE_DELTA; f++)
+                    if(game->Tiles[i][y] != U2048Tile_Empty)
                     {
-                        U2048RenderStart(game);
-                        U2048RenderBoard(game);
-                        
-                        for(int i = 0; i < U2048_GAME_SIZE; i++)
-                        {
-                            for(int j = 0; j < U2048_GAME_SIZE; j++)
-                            {
-                                FT800Point_t p1;
-                                FT800Point_t p2;
-                                
-                                U2048GetTileCorners(&p1, &p2, i, j);
-                                
-                                if((y == j)
-                               && ((action == U2048Action_SwipeRight && i < x)
-                               || (action == U2048Action_SwipeLeft && i >= x)))
-                                {
-                                    p1.X += f * dX;
-                                    p2.X += f * dX;
-                                }
-                                else if((x == i)
-                               && (((action == U2048Action_SwipeDown && j < y)
-                               || (action == U2048Action_SwipeUp && j >= y))))
-                                {
-                                    p1.Y += f * dY;
-                                    p2.Y += f * dY;
-                                }
-                                
-                              U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
-                            }
-                        }
-                        
-                        if(f == (U2048_TILE_DELTA - 1))
-                        {
-                            if(action == U2048Action_SwipeRight
-                                || action == U2048Action_SwipeLeft)
-                            {
-                                int xSwap = x;
-                                while((action == U2048Action_SwipeRight
-                                        && xSwap > 0)
-                                    || (action == U2048Action_SwipeLeft
-                                        && xSwap < U2048_GAME_SIZE - 1))
-                                {
-                                 U2048Tile_t tile = game->Tiles[xSwap - dX][y];
-                                 game->Tiles[xSwap][y] = tile;
-                                 xSwap -= dX;
-                                }
-                                
-                                game->Tiles[xSwap][y] = U2048Tile_Undefined;
-                            }
-                            else if(action == U2048Action_SwipeDown
-                                || action == U2048Action_SwipeUp)
-                            {
-                                int ySwap = y;
-                                while((action == U2048Action_SwipeDown
-                                        && ySwap > 0)
-                                    || (action == U2048Action_SwipeUp
-                                        && ySwap < U2048_GAME_SIZE - 1))
-                                {
-                                 U2048Tile_t tile = game->Tiles[x][ySwap - dY];
-                                 game->Tiles[x][ySwap] = tile;
-                                 ySwap -= dY;
-                                }
-                                
-                                game->Tiles[x][ySwap] = U2048Tile_Undefined;
-                            }
-                            
-                        U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
-                            
-                            // TODO: Handle 2048, you win!
-                            
-                            U2048NewTile(game, x, y, newTile);
-                            U2048NewTile(game, 0, y, U2048Tile_Empty);
-                        }
-                        
-                        U2048RenderFinish(game);
+                        emptyToEnd = false;
+                        break;
                     }
                 }
-                else
+
+                if(emptyToEnd)
+                    break;
+                
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
                 {
-                    bool emptyToEnd = U2048RowIsEmpty(game, 0, x, y);
-                    while(emptyToEnd && game->Tiles[x][y] == U2048Tile_Empty)
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = U2048_TILE_COUNT; i >= 0; i--)
                     {
-                        for(int f = 0; f < U2048_TILE_DELTA; f++)
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
                         {
-                            U2048RenderStart(game);
-                            U2048RenderBoard(game);
+                            FT800Point_t p1;
+                            FT800Point_t p2;
                             
-                            for(int i = U2048_GAME_SIZE - 1; i >= 0; i--)
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(j == y && i < x)
                             {
-                                for(int j = 0; j < U2048_GAME_SIZE; j++)
-                                {
-                                    FT800Point_t p1;
-                                    FT800Point_t p2;
-                                    
-                                    U2048GetTileCorners(&p1, &p2, i, j);
-
-                                    if((action == U2048Action_SwipeRight
-                                        || action == U2048Action_SwipeLeft)
-                                        && j == y && i < x)
-                                    {
-                                        p1.X += f * dX;
-                                        p2.X += f * dX;
-                                    }
-                                    else if(action == U2048Action_SwipeDown
-                                        || action == U2048Action_SwipeUp)
-                                    {
-                                        p1.Y += f * dY;
-                                        p2.Y += f * dY;
-                                    }
-                                    
-                                    U2048Tile_t tile = game->Tiles[i][j];
-                                    U2048RenderTile(game, p1, p2, tile);
-                                }
-                            }
-
-                            if(f == (U2048_TILE_DELTA - 1))
-                            {
-                                if(action == U2048Action_SwipeRight
-                                    || action == U2048Action_SwipeLeft)
-                                {
-                                    int xSwap = x;
-                                    while((action == U2048Action_SwipeRight
-                                            && xSwap > 0)
-                                        || (action == U2048Action_SwipeLeft
-                                            && xSwap < U2048_GAME_SIZE - 1))
-                                    {
-                                 U2048Tile_t tile = game->Tiles[xSwap - dX][y];
-                                 game->Tiles[xSwap][y] = tile;
-                                 xSwap -= dX;
-                                    }
-                                    
-                                    game->Tiles[xSwap][y] = U2048Tile_Undefined;
-                                }
-                                else if(action == U2048Action_SwipeDown
-                                    || action == U2048Action_SwipeUp)
-                                {
-                                    int ySwap = y;
-                                    while((action == U2048Action_SwipeDown
-                                            && ySwap > 0)
-                                        || (action == U2048Action_SwipeUp
-                                            && ySwap < U2048_GAME_SIZE - 1))
-                                    {
-                                 U2048Tile_t tile = game->Tiles[x][ySwap - dY];
-                                 game->Tiles[x][ySwap] = tile;
-                                 ySwap -= dY;
-                                    }
-                                    
-                                 game->Tiles[x][ySwap] = U2048Tile_Undefined;
-                                }
-                                
-                                fullyMerged = false;
-                                
-                                game->Tiles[0][y] = U2048Tile_Undefined;
-                                U2048NewTile(game, 0, y, U2048Tile_Empty);
+                                p1.X += f;
+                                p2.X += f;
                             }
                             
-                            U2048RenderFinish(game);
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
                         }
                     }
-                }
-            }
+                    
+                    U2048RenderFinish(game);
 
-            if(action == U2048Action_SwipeRight)
-            {
-                x--;
-            }
-            else
-            {
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int xSwap = x; xSwap >= 0; xSwap--)
+                        {
+                            U2048Tile_t swap = game->Tiles[xSwap - 1][y];
+                            game->Tiles[xSwap][y] = swap;
+                        }
+
+                        game->Tiles[0][y] = U2048Tile_Undefined;
+                        U2048NewTile(game, 0, y, U2048Tile_Empty);
+                    }
+                }
+                
                 x++;
             }
         }
-        
-        if(action == U2048Action_SwipeDown)
+    }
+}
+
+void U2048MergeRight(U2048_t *game)
+{
+    for(int y = 0; y < U2048_GAME_SIZE; y++)
+    {
+        for(int x = U2048_TILE_COUNT; x > 0; x--)
         {
+            if(game->Tiles[x][y] != U2048Tile_Empty
+                && game->Tiles[x][y] == game->Tiles[x - 1][y])
+            {
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = U2048_TILE_COUNT; i >= 0; i--)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            FT800Point_t p1;
+                            FT800Point_t p2;
+                            
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(j == y && i < x)
+                            {
+                                p1.X += f;
+                                p2.X += f;
+                            }
+                            
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+                    
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int xSwap = x; xSwap >= 0; xSwap--)
+                        {
+                            U2048Tile_t swap = game->Tiles[xSwap - 1][y];
+                            game->Tiles[xSwap][y] = swap;
+                        }
+
+                        game->Tiles[0][y] = U2048Tile_Undefined;
+                        U2048NewTile(game, 0, y, U2048Tile_Empty);
+                        
+                        U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+                        U2048NewTile(game, x, y, newTile);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void U2048JustifyLeft(U2048_t *game)
+{
+    for(int y = 0; y < U2048_GAME_SIZE; y++)
+    {
+        for(int x = 0; x < U2048_GAME_SIZE; x++)
+        {
+            if(game->Tiles[x][y] == U2048Tile_Empty)
+            {
+                bool emptyToEnd = true;
+                for(int i = x + 1; i < U2048_GAME_SIZE; i++)
+                {
+                    if(game->Tiles[i][y] != U2048Tile_Empty)
+                    {
+                        emptyToEnd = false;
+                        break;
+                    }
+                }
+
+                if(emptyToEnd)
+                    break;
+                
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = 0; i < U2048_GAME_SIZE; i++)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            FT800Point_t p1;
+                            FT800Point_t p2;
+                            
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(j == y && i > x)
+                            {
+                                p1.X -= f;
+                                p2.X -= f;
+                            }
+                            
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int xSwap = x; xSwap < U2048_GAME_SIZE; xSwap++)
+                        {
+                            U2048Tile_t swap = game->Tiles[xSwap + 1][y];
+                            game->Tiles[xSwap][y] = swap;
+                        }
+                        
+                       game->Tiles[U2048_TILE_COUNT][y] = U2048Tile_Undefined;
+                       U2048NewTile(game, U2048_TILE_COUNT, y, U2048Tile_Empty);
+                    }
+                }
+
+                x--;
+            }
+        }
+    }
+}
+
+void U2048MergeLeft(U2048_t *game)
+{
+    for(int y = 0; y < U2048_GAME_SIZE; y++)
+    {
+        for(int x = 0; x < U2048_GAME_SIZE; x++)
+        {
+            if(game->Tiles[x][y] != U2048Tile_Empty
+                && game->Tiles[x][y] == game->Tiles[x + 1][y])
+            {
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = U2048_TILE_COUNT; i >= 0; i--)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            FT800Point_t p1;
+                            FT800Point_t p2;
+                            
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(j == y && i > x)
+                            {
+                                p1.X -= f;
+                                p2.X -= f;
+                            }
+                            
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+                    
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int xSwap = x; xSwap < U2048_GAME_SIZE; xSwap++)
+                        {
+                            U2048Tile_t swap = game->Tiles[xSwap + 1][y];
+                            game->Tiles[xSwap][y] = swap;
+                        }
+
+                       game->Tiles[U2048_TILE_COUNT][y] = U2048Tile_Undefined;
+                       U2048NewTile(game, U2048_TILE_COUNT, y, U2048Tile_Empty);
+                        
+                       U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+                       U2048NewTile(game, x, y, newTile);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void U2048JustifyUp(U2048_t *game)
+{
+    for(int x = 0; x < U2048_GAME_SIZE; x++)
+    {
+        for(int y = 0; y < U2048_GAME_SIZE; y++)
+        {
+            if(game->Tiles[x][y] != U2048Tile_Empty)
+                continue;
+
+            bool emptyToEnd = true;
+            for(int i = y + 1; i < U2048_GAME_SIZE; i++)
+            {
+                if(game->Tiles[x][i] != U2048Tile_Empty)
+                {
+                    emptyToEnd = false;
+                    break;
+                }
+            }
+
+            if(emptyToEnd)
+                break;
+            
+            for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+            {
+                U2048RenderStart(game);
+                U2048RenderBoard(game);
+                
+                for(int i = 0; i < U2048_GAME_SIZE; i++)
+                {
+                    for(int j = 0; j < U2048_GAME_SIZE; j++)
+                    {
+                        FT800Point_t p1;
+                        FT800Point_t p2;
+                        
+                        U2048GetTileCorners(&p1, &p2, i, j);
+                        
+                        if(i == x && j > y)
+                        {
+                            p1.Y -= f;
+                            p2.Y -= f;
+                        }
+                        
+                        U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                    }
+                }
+                
+                U2048RenderFinish(game);
+
+                if(f >= (U2048_TILE_DELTA - 1))
+                {
+                    for(int ySwap = y; ySwap < U2048_GAME_SIZE; ySwap++)
+                    {
+                        U2048Tile_t swap = game->Tiles[x][ySwap + 1];
+                        game->Tiles[x][ySwap] = swap;
+                    }
+                    
+                    game->Tiles[x][U2048_TILE_COUNT] = U2048Tile_Undefined;
+                    U2048NewTile(game, x, U2048_TILE_COUNT, U2048Tile_Empty);
+                }
+            }
+            
             y--;
         }
-        else
+    }
+}
+
+void U2048MergeUp(U2048_t *game)
+{
+    for(int x = 0; x < U2048_GAME_SIZE; x++)
+    {
+        for(int y = 0; y < U2048_GAME_SIZE; y++)
         {
+            if(game->Tiles[x][y] != U2048Tile_Empty
+                && game->Tiles[x][y] == game->Tiles[x][y + 1])
+            {
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = 0; i < U2048_GAME_SIZE; i++)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            FT800Point_t p1;
+                            FT800Point_t p2;
+                            
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(i == x && j > y)
+                            {
+                                p1.Y -= f;
+                                p2.Y -= f;
+                            }
+                            
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+                    
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int ySwap = y; ySwap < U2048_GAME_SIZE; ySwap++)
+                        {
+                            U2048Tile_t swap = game->Tiles[x][ySwap + 1];
+                            game->Tiles[x][ySwap] = swap;
+                        }
+
+                       game->Tiles[x][U2048_TILE_COUNT] = U2048Tile_Undefined;
+                       U2048NewTile(game, x, U2048_TILE_COUNT, U2048Tile_Empty);
+                        
+                       U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+                       U2048NewTile(game, x, y, newTile);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void U2048JustifyDown(U2048_t *game)
+{
+    for(int x = 0; x < U2048_GAME_SIZE; x++)
+    {
+        for(int y = U2048_TILE_COUNT; y > 0; y--)
+        {
+            if(game->Tiles[x][y] != U2048Tile_Empty)
+                continue;
+            
+            bool emptyToEnd = true;
+            for(int i = 0; i < y; i++)
+            {
+                if(game->Tiles[x][i] != U2048Tile_Empty)
+                {
+                    emptyToEnd = false;
+                    break;
+                }
+            }
+
+            if(emptyToEnd)
+                break;
+            
+            for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+            {
+                U2048RenderStart(game);
+                U2048RenderBoard(game);
+                
+                for(int i = 0; i < U2048_GAME_SIZE; i++)
+                {
+                    for(int j = U2048_TILE_COUNT; j >= 0; j--)
+                    {
+                        FT800Point_t p1;
+                        FT800Point_t p2;
+                        
+                        U2048GetTileCorners(&p1, &p2, i, j);
+                        
+                        if(i == x && j < y)
+                        {
+                            p1.Y += f;
+                            p2.Y += f;
+                        }
+                        
+                        U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                    }
+                }
+                
+                U2048RenderFinish(game);
+                
+                if(f >= (U2048_TILE_DELTA - 1))
+                {
+                    for(int ySwap = y; ySwap >= 0; ySwap--)
+                    {
+                        U2048Tile_t swap = game->Tiles[x][ySwap - 1];
+                        game->Tiles[x][ySwap] = swap;
+                    }
+
+                    game->Tiles[x][0] = U2048Tile_Undefined;
+                    U2048NewTile(game, x, 0, U2048Tile_Empty);
+                }
+            }
+            
             y++;
         }
     }
-    
-    return fullyMerged;
+}
+
+void U2048MergeDown(U2048_t *game)
+{
+    for(int x = 0; x < U2048_GAME_SIZE; x++)
+    {
+        for(int y = U2048_TILE_COUNT; y > 0; y--)
+        {
+            if(game->Tiles[x][y] != U2048Tile_Empty
+                && game->Tiles[x][y] == game->Tiles[x][y - 1])
+            {
+                for(int f = 0; f < U2048_TILE_DELTA; f += U2048_TILE_MOVE_STEP)
+                {
+                    U2048RenderStart(game);
+                    U2048RenderBoard(game);
+                    
+                    for(int i = 0; i < U2048_GAME_SIZE; i++)
+                    {
+                        for(int j = 0; j < U2048_GAME_SIZE; j++)
+                        {
+                            FT800Point_t p1;
+                            FT800Point_t p2;
+                            
+                            U2048GetTileCorners(&p1, &p2, i, j);
+                            
+                            if(i == x && j < y)
+                            {
+                                p1.Y += f;
+                                p2.Y += f;
+                            }
+                            
+                            U2048RenderTile(game, p1, p2, game->Tiles[i][j]);
+                        }
+                    }
+                    
+                    U2048RenderFinish(game);
+                    
+                    if(f >= (U2048_TILE_DELTA - 1))
+                    {
+                        for(int ySwap = y; ySwap >= 0; ySwap--)
+                        {
+                            U2048Tile_t swap = game->Tiles[x][ySwap - 1];
+                            game->Tiles[x][ySwap] = swap;
+                        }
+
+                       game->Tiles[x][0] = U2048Tile_Undefined;
+                       U2048NewTile(game, x, 0, U2048Tile_Empty);
+                        
+                       U2048Tile_t newTile = U2048NextTile(game->Tiles[x][y]);
+                       U2048NewTile(game, x, y, newTile);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void U2048Action(U2048_t *game, U2048Action_t action)
 {
-    bool fullyMerged = false;
-    while(!fullyMerged) {
-        fullyMerged = U2048MoveTiles(game, action);
+    switch(action)
+    {
+        case U2048Action_SwipeRight:
+            U2048JustifyRight(game);
+            U2048MergeRight(game);
+            U2048JustifyRight(game);
+            break;
+        case U2048Action_SwipeLeft:
+            U2048JustifyLeft(game);
+            U2048MergeLeft(game);
+            U2048JustifyLeft(game);
+            break;
+        case U2048Action_SwipeUp:
+            U2048JustifyUp(game);
+            U2048MergeUp(game);
+            U2048JustifyUp(game);
+            break;
+        case U2048Action_SwipeDown:
+            U2048JustifyDown(game);
+            U2048MergeDown(game);
+            U2048JustifyDown(game);
+            break;
     }
     
     // Randomly place a tile, mostly 2 sometimes 4 if tiles were moved
