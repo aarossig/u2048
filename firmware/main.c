@@ -37,32 +37,6 @@ int main(void)
         // Error communicating with the Gameduino
     }
     
-    /*
-    while(1)
-    {
-        FT800Color_t textColor = { .Red = 255, .Green = 255, .Blue = 255 };
-        FT800Point_t p = { .X = 100, .Y = 100 };
-        
-        FT800CmdNewDisplayList(&ft800);
-        FT800DlClearCSTBuffers(&ft800, true, true, true);
-        FT800DlRgb(&ft800, textColor);
-        
-        char str[20];
-        
-        sprintf(str, "%d", SystemRtc.TimeDate.SecondUnits);
-        
-        FT800CmdDrawText(&ft800, p, FT800Font_AntiAliased3,
-                FT800Option_CenterX | FT800Option_CenterY,
-                str, strlen(str));
-
-        FT800DlEnd(&ft800);
-        FT800CmdSwapDisplayList(&ft800);
-        FT800CmdFlush(&ft800);
-
-        for(int i = 0; i < 1000000; i++);
-    }
-    */
-    
     U2048_t u2048;
     U2048Init(&u2048, &ft800);
     U2048GameRender(&u2048);
