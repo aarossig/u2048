@@ -188,11 +188,13 @@ void FT800DlEnd(FT800_t *ft800)
 
 void FT800CmdNewDisplayList(FT800_t *ft800)
 {
-    uint8_t newDisplayList[] = { 0x00, 0xFF, 0xFF, 0xFF };
-    FT800CoprocessorCommand(ft800, newDisplayList, 4);
+//    uint8_t newDisplayList[] = { 0x00, 0xFF, 0xFF, 0xFF };
+//    FT800CoprocessorCommand(ft800, newDisplayList, 4);
 
-//    uint8_t newDisplayList[] = { 0x00, 0x00 };
-//    FT800Write(ft800, FT800Register_CMD_DL, newDisplayList, 2);
+    for(volatile int i = 0; i < 1000; i++);
+
+    uint8_t newDisplayList[] = { 0x00, 0x00 };
+    FT800Write(ft800, FT800Register_CMD_DL, newDisplayList, 2);
 }
 
 void FT800CmdSwapDisplayList(FT800_t *ft800)

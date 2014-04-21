@@ -16,7 +16,7 @@
 #define FT800_CHIPID 0x7C
 
 #define FT800_SWIPE_X 300
-#define FT800_SWIPE_Y 300
+#define FT800_SWIPE_Y 350
 
 /* FT800 Instance *************************************************************/
 

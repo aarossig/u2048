@@ -13,7 +13,6 @@
 
 #include "Gameduino2.h"
 #include "FT800.h"
-
 #include "u2048.h"
 
 int main(void)
@@ -37,22 +36,20 @@ int main(void)
     {
         // Error communicating with the Gameduino
     }
-
+    
     /*
     while(1)
     {
         FT800Color_t textColor = { .Red = 255, .Green = 255, .Blue = 255 };
         FT800Point_t p = { .X = 100, .Y = 100 };
         
-        int i = rand();
-        
         FT800CmdNewDisplayList(&ft800);
         FT800DlClearCSTBuffers(&ft800, true, true, true);
         FT800DlRgb(&ft800, textColor);
-
+        
         char str[20];
-
-        sprintf(str, "%d", i);
+        
+        sprintf(str, "%d", SystemRtc.TimeDate.SecondUnits);
         
         FT800CmdDrawText(&ft800, p, FT800Font_AntiAliased3,
                 FT800Option_CenterX | FT800Option_CenterY,

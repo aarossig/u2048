@@ -18,8 +18,8 @@
 #define U2048_TILE_DELTA (U2048_TILE_SIZE + U2048_TILE_SPACING)
 #define U2048_TILE_COUNT (U2048_GAME_SIZE - 1)
 
-#define U2048_NEW_TILE_STEP 2
-#define U2048_TILE_MOVE_STEP 8
+#define U2048_NEW_TILE_STEP 1
+#define U2048_TILE_MOVE_STEP 4
 
 /* String Literals ************************************************************/
 
